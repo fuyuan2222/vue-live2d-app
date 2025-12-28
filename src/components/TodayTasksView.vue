@@ -167,9 +167,7 @@ const characterMessage = computed(() => {
 .split-container {
   display: flex;
   width: 100%;
-  
-   height: 100dvh; 
-  
+  height: 100dvh; 
   position: relative;
   gap: 0;
   padding: 0;
@@ -193,7 +191,9 @@ const characterMessage = computed(() => {
   /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
-  transform: scale(3);
+  
+  /* ★修正：scale(3)になっていたのを1に戻しました（3だと拡大されすぎて壊れます） */
+  transform: scale(1); 
   z-index: 1;
 }
 
@@ -207,12 +207,13 @@ const characterMessage = computed(() => {
 
 /* 左：タスクパネル */
 .task-pane {
-
+  background: #ffffff;
 }
 
 /* 右：キャラパネル */
 .char-pane {
-
+  /* ★修正：半々の時（デフォルト）を白背景に設定 */
+  background: #ffffff; 
 }
 
 
@@ -222,7 +223,7 @@ const characterMessage = computed(() => {
 .split-container.tasks .task-pane { flex: 9; }
 .split-container.tasks .char-pane {
   flex: 1;
-  background: #e0e0e0;
+  background: #e0e0e0; /* 脇役の時は少し暗くする */
   filter: grayscale(50%);
 }
 
@@ -237,21 +238,20 @@ const characterMessage = computed(() => {
 /* === 中身のパーツ調整 === */
 
 .pane-title {
-  margin: 40px 20px 20px 20px; /* 上の余白も少しリッチに */
+  margin: 40px 20px 20px 20px;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #fff;
+  
+  /* ★修正：背景が白なので、文字色は濃いグレー(#333)に戻します */
+  color: #333; 
+  
   white-space: nowrap;
 }
 
 .task-scroll-area {
   flex: 1;
   overflow-y: auto;
-  
-  /* ★重要：下にたっぷりと余白(100px)を入れることで、
-     一番下のタスクがメニューバーに隠れずスクロールできるようになる */
   padding: 0 20px 100px 20px;
-  
   scrollbar-width: none;
 }
 .task-scroll-area::-webkit-scrollbar { display: none; }
@@ -282,32 +282,31 @@ const characterMessage = computed(() => {
   width: 100%;
   height: 100%;
   position: absolute;
-  
-  /* ★枠が大きくなったので、位置調整 */
-  /* メニューバーの後ろまでキャラがいるように見せるため bottom: 0 */
   bottom: 0; 
-  left: 40%;
-  transform: translateX(-50%) scale(1.0); /* 全身が見えるサイズ */
+  
+  /* ★修正：左40%になっていたのを中央(50%)に戻し、サイズも適切に */
+  left: 50%;
+  transform: translateX(-50%) scale(0.85);
   
   transition: transform 0.5s;
   pointer-events: none;
 }
 
-/* neutral */
+/* neutral(半々)の時 */
 .split-container.neutral .live2d-model {
   transform: translateX(-50%) scale(0.85);
 }
 
 /* キャラ主役（拡大） */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.0); /* ドーンと大きく */
-  bottom: -5%; /* 少し下げて顔を近づける */
+  transform: translateX(-50%) scale(1.0); 
+  bottom: -5%;
 }
 
 /* タスク主役（縮小） */
 .split-container.tasks .live2d-model {
   transform: translateX(-50%) scale(0.65);
-  bottom: 5%; /* メニューバーの上にちょこんと乗る感じ */
+  bottom: 5%;
   opacity: 0.6;
 }
 
