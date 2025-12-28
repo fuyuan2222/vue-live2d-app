@@ -85,14 +85,16 @@ const characterMessage = computed(() => {
 .split-container {
   display: flex;
   width: 100%;
-  height: 100dvh; 
+  
+  /* ★修正：100dvh だと大きすぎるので 100% に変更 */
+  /* これで main-content の padding-bottom が効くようになります */
+  height: 100%; 
+  
   position: relative;
   gap: 0;
   padding: 0;
   overflow: hidden;
   background-color: #ffffff;
-  
-  /* ★最重要：強制的にライトモードとして描画させる（ダークモードによる色反転を無効化） */
   color-scheme: light; 
 }
 

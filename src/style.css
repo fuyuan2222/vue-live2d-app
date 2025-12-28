@@ -34,14 +34,17 @@ body {
   text-align: left;
 }
 
-/* .main-content の余白も邪魔になる可能性があるのでゼロか調整 */
 .main-content {
-  margin: 0; 
-  padding: 0;
   width: 100%;
-  height: 100%;
+  /* メニューバーの高さ（約70〜80px）＋少し余裕を持たせた余白 */
+  padding-bottom: 90px !important; 
+  
+  /* paddingを含めてサイズ計算する（これがないとレイアウトが崩れる） */
+  box-sizing: border-box; 
+  
+  /* 余計なスクロールを出さない */
+  overflow: hidden; 
 }
-
 /* --- 以下、汎用パーツのデザイン --- */
 
 h1 {
