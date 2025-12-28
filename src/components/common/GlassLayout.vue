@@ -37,25 +37,36 @@
 
 /* すりガラスボード（手前） */
 .glass-board {
-  position: relative;
+  /* ★配置の変更：画面の下側に固定する */
+  position: absolute; /* 親(relative)に対して絶対配置 */
+  bottom: 0;        /* 真下に配置 */
+  left: 50%;        /* 左右中央に */
+  transform: translateX(-50%); /* 左右中央寄せの定型文 */
+  
+  /* ★高さの変更：ここが「胸から下」の調整ポイント */
+  height: 60vh; /* 画面の下60%をボードにする（上40%はキャラ用スペース） */
+  
+  /* 横幅 */
+  width: 100%;      /* スマホなら横幅いっぱい */
+  max-width: 600px; /* PCなら広がりすぎないように */
+  
+  /* ★z-indexは手前のまま */
   z-index: 10;
   
-  width: 90%;
-  max-width: 600px; /* PCで横に広がりすぎないように */
-  height: 85vh; /* 画面の85%の高さ */
-  margin: 5vh auto; /* 中央配置 */
-  
-  /* すりガラスデザイン */
+  /* デザイン */
   background-color: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* 枠線と影 */
+  border-top: 1px solid rgba(255, 255, 255, 0.4); /* 上の線だけ強調 */
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
+  
+  /* ★角丸：上だけ丸くして、下はストンと落とす */
+  border-radius: 24px 24px 0 0;
   
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 角丸からはみ出さないように */
+  overflow: hidden;
 }
 </style>
