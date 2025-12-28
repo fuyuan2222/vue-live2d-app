@@ -15,7 +15,7 @@
           </div>
           <ul class="task-list">
             <li v-for="(task, index) in filteredTodayTasks" :key="index">
-              <input type="checkbox" v-model="task.done" @click.stop />
+              <input type="checkbox" v-model="task.done" @click.stop class="custom-checkbox" />
               <span class="task-text" :class="[task.done ? 'done' : '', task.priority]">
                 {{ task.text }}
               </span>
@@ -90,8 +90,10 @@ const characterMessage = computed(() => {
   gap: 0;
   padding: 0;
   overflow: hidden;
-  /* ダークモードでも背景が黒くならないように白固定 */
-  background-color: #ffffff; 
+  background-color: #ffffff;
+  
+  /* ★最重要：強制的にライトモードとして描画させる（ダークモードによる色反転を無効化） */
+  color-scheme: light; 
 }
 
 /* === 共通パネル設定 === */
@@ -108,7 +110,6 @@ const characterMessage = computed(() => {
   opacity: 1;
   transform: scale(1); 
   z-index: 1;
-  background-color: #fff;
 }
 
 .pane-content {
@@ -124,9 +125,10 @@ const characterMessage = computed(() => {
   background: #ffffff;
 }
 
-/* 右：キャラパネル（オレンジグラデーション） */
+/* 右：キャラパネル（オレンジテーマ） */
 .char-pane {
-  background: linear-gradient(180deg, #FFF3E0 0%, #FFFFFF 100%);
+  /* 綺麗なオレンジグラデーション */
+  background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
 }
 
 /* === 動作時のスタイル === */
@@ -135,8 +137,8 @@ const characterMessage = computed(() => {
 .split-container.tasks .task-pane { flex: 9; }
 .split-container.tasks .char-pane {
   flex: 1;
-  background: #FFE0B2; 
-  filter: grayscale(30%);
+  background: #FFCC80; /* 濃いめのオレンジ */
+  filter: grayscale(20%);
 }
 
 /* キャラ主役 */
@@ -152,7 +154,7 @@ const characterMessage = computed(() => {
   margin: 40px 20px 20px 20px;
   font-size: 1.2rem;
   font-weight: bold;
-  /* ★ダークモード対策：文字色を濃いグレーに強制固定 */
+  /* 文字色を強制指定 */
   color: #333333 !important; 
   white-space: nowrap;
 }
@@ -181,7 +183,7 @@ const characterMessage = computed(() => {
   transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
   font-weight: 900;
-  color: #FFCC80; 
+  color: #FFB74D; /* オレンジ */
   font-size: 1.0rem;
   letter-spacing: 4px;
 }
@@ -193,46 +195,53 @@ const characterMessage = computed(() => {
   position: absolute;
   bottom: 0; 
   left: 50%;
-  transform: translateX(-50%) scale(0.95);
+  
+  /* neutral時：少し大きめ */
+  transform: translateX(-50%) scale(1.0);
+  
   transition: transform 0.5s;
   pointer-events: none;
 }
 
+/* neutral(半々) */
 .split-container.neutral .live2d-model {
-  transform: translateX(-50%) scale(0.95);
+  transform: translateX(-50%) scale(1.0);
 }
 
+/* キャラ主役（拡大） */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.1);
+  transform: translateX(-50%) scale(1.2); /* 迫力を出す */
   bottom: -5%;
 }
 
+/* タスク主役（縮小） */
 .split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.65);
+  transform: translateX(-50%) scale(0.7);
   bottom: 5%;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-/* === 吹き出し（枠の外に配置） === */
+/* === ★修正：吹き出し（position: fixed で強制的に画面に浮かせます） === */
 .bubble {
-  position: absolute; /* 画面全体に対して絶対配置 */
-  top: 15%; /* 高さはお好みで */
-  right: 5%;
-  max-width: 50%; /* 横幅制限 */
+  position: fixed; /* 親のoverflow:hiddenを無視して画面に固定 */
+  top: 15vh; /* 画面の上から15%の位置 */
+  right: 5vw; /* 画面の右から5%の位置 */
+  
+  max-width: 50vw; /* 横幅は画面の半分まで */
   
   background: #ffffff;
   padding: 15px 20px;
   border-radius: 30px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); /* 影を少し濃く */
+  /* オレンジ色の影をつけてテーマに合わせる */
+  box-shadow: 0 5px 20px rgba(255, 152, 0, 0.2); 
   
   font-size: 0.95rem;
   font-weight: bold;
   
-  /* ★ダークモード対策：文字色を黒系に強制固定 */
+  /* 文字色強制固定 */
   color: #333333 !important; 
   
-  /* 一番手前に表示 */
-  z-index: 100; 
+  z-index: 9999; /* 誰よりも手前に */
   
   animation: float 3s ease-in-out infinite;
 }
@@ -263,23 +272,32 @@ const characterMessage = computed(() => {
   margin-bottom: 10px;
   padding: 15px;
   border-radius: 12px;
-  border-left: 4px solid #FFE0B2; 
+  /* オレンジのアクセントライン */
+  border-left: 5px solid #FFB74D; 
 }
 
-/* ★ダークモード対策：タスクの文字色も強制固定 */
+/* タスク文字色強制固定 */
 .task-text {
   color: #333333 !important;
   font-weight: 500;
+  font-size: 1rem;
 }
 
 .done { 
   text-decoration: line-through; 
-  color: #bbbbbb !important; /* 完了済みは薄いグレー */
+  color: #bbbbbb !important; 
 }
 
-/* 優先度 */
-.task-list li:has(.high) { border-left-color: #FF7043; } 
-.task-list li:has(.medium) { border-left-color: #FFB74D; }
+/* チェックボックスの色調整（ブラウザ依存ですが可能な範囲で） */
+.custom-checkbox {
+  accent-color: #FF9800;
+  width: 20px;
+  height: 20px;
+}
+
+/* 優先度による色分け */
+.task-list li:has(.high) { border-left-color: #FF5722; } /* 高：赤オレンジ */
+.task-list li:has(.medium) { border-left-color: #FF9800; } /* 中：オレンジ */
 
 .del-btn { 
   margin-left: auto; 
@@ -287,7 +305,7 @@ const characterMessage = computed(() => {
   height: 30px; 
   border-radius: 50%; 
   background: #eee; 
-  color: #888; /* アイコン色も固定 */
+  color: #888; 
   border:none; 
   display:flex; 
   align-items:center; 
@@ -295,7 +313,6 @@ const characterMessage = computed(() => {
   cursor:pointer;
 }
 
-/* タスクがない時の文字 */
 .no-tasks {
   text-align: center;
   color: #999 !important;
