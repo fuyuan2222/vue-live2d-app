@@ -82,35 +82,38 @@ const characterMessage = computed(() => {
   return '一緒にがんばろう！✨'
 })
 </script>
-
 <style scoped>
-/* コンテナ */
+/* コンテナ：余白ゼロで画面いっぱいに */
 .split-container {
   display: flex;
   width: 100%;
-  height: 80vh;
+  /* ナビゲーションバーの高さを引いた分だけ確保（調整してください） */
+  height: 100%; 
   position: relative;
-  gap: 15px; 
-  padding: 15px;
-  box-sizing: border-box;
+  /* gapとpaddingを削除して隙間をなくす */
+  gap: 0; 
+  padding: 0;
+  overflow: hidden;
 }
 
 /* === 共通パネル設定 === */
 .pane {
-  border-radius: 20px;
+  position: relative;
   overflow: hidden;
   cursor: pointer;
-  position: relative;
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   
-  /* デフォルト(neutral)の状態：両方とも等幅、不透明 */
+  /* 角丸をなくしてソリッドに */
+  border-radius: 0;
+  border: none; /* 枠線も消す */
+  
+  /* アニメーション */
+  transition: all 0.5s cubic-bezier(0.2, 0, 0, 1); /* キビキビ動く */
+  
+  /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
   transform: scale(1);
-  z-index: 5;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  z-index: 1;
 }
 
 .pane-content {
@@ -121,121 +124,128 @@ const characterMessage = computed(() => {
 
 /* === 状態ごとのスタイル === */
 
-/* -------------------------
-   左：タスクパネルの個別設定
-------------------------- */
+/* --- 左：タスクパネル --- */
 .task-pane {
-  background: rgba(255, 255, 255, 0.9);
+  background: #ffffff; /* 完全な白 */
   display: flex;
   flex-direction: column;
+  /* 境界線だけ引いておく */
+  border-right: 1px solid rgba(0,0,0,0.1);
 }
 
-/* タスクが主役 */
+/* タスク主役：画面の9割を占める */
 .split-container.tasks .task-pane {
-  flex: 5; /* ぐいっと広がる */
+  flex: 9; 
   z-index: 10;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
-/* タスクが脇役（キャラモード時） */
+/* タスク脇役：端っこに少しだけ残る */
 .split-container.char .task-pane {
   flex: 1; 
-  transform: scale(0.92) translateY(10px);
-  opacity: 0.6;
-  z-index: 1;
-  filter: blur(1px);
+  opacity: 0.8;
+  /* 暗くして「今は触れないよ」感を出す */
+  background: #f0f0f0; 
+  filter: brightness(0.9);
 }
 
-/* -------------------------
-   右：キャラパネルの個別設定
-------------------------- */
+/* --- 右：キャラパネル --- */
 .char-pane {
-  background: linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%);
+  /* 背景を画面いっぱいに */
+  background: linear-gradient(180deg, #e0f7fa 0%, #ffffff 100%);
 }
 
-/* キャラが主役 */
+/* キャラ主役 */
 .split-container.char .char-pane {
-  flex: 5;
-  background: #fff;
+  flex: 9;
   z-index: 10;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
-/* キャラが脇役（タスクモード時） */
+/* キャラ脇役 */
 .split-container.tasks .char-pane {
   flex: 1;
-  transform: scale(0.92) translateY(10px);
-  opacity: 0.5;
-  z-index: 1;
-  filter: grayscale(30%) blur(1px);
+  opacity: 0.8;
+  filter: brightness(0.9) blur(2px); /* ぼかして奥っぽく */
 }
+
 
 /* === 中身のパーツ調整 === */
 
 .pane-title {
-  margin: 15px;
-  font-size: 1.1rem;
-  color: #444;
+  margin: 20px;
+  font-size: 1.4rem; /* 文字も大きく */
+  font-weight: bold;
+  color: #333;
   white-space: nowrap;
 }
 
 .task-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 15px 15px 15px;
-  scrollbar-width: thin;
+  padding: 0 20px 80px 20px; /* 下の方はナビゲーションと被らないように余白多め */
+  scrollbar-width: none; /* スクロールバーも隠してスッキリさせる */
+}
+.task-scroll-area::-webkit-scrollbar {
+  display: none;
 }
 
-/* 縮んだ時に中身を隠す（neutralの時は隠さない！） */
+/* 縮んだ時に中身を消す */
 .split-container.char .task-scroll-area,
 .split-container.char .pane-title {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
+  transition: opacity 0.1s; /* 素早く消す */
 }
 
+/* 「TAP」の文字を大きくスタイリッシュに */
 .inactive-label {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
-  font-weight: bold;
-  color: #666;
-  opacity: 0.8;
-  letter-spacing: 2px;
-  font-size: 0.8rem;
+  font-weight: 900;
+  color: #ccc;
+  font-size: 1.2rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
 }
 
+/* Live2Dモデル：画面いっぱいに表示 */
 .live2d-model {
   width: 100%;
   height: 100%;
   position: absolute;
-  bottom: -30px;
+  bottom: -5%; /* 足元を少し切るくらいで大きく見せる */
   left: 50%;
-  transform: translateX(-50%);
-  /* neutralの時は少し小さく表示してもいいかも */
+  transform: translateX(-50%) scale(1.1); /* ★1.1倍に拡大して迫力を出す */
   transition: transform 0.5s;
 }
 
-/* neutralの時、キャラが大きすぎるとはみ出るので少し調整 */
+/* neutralの時は少し引く */
 .split-container.neutral .live2d-model {
   transform: translateX(-50%) scale(0.9);
+  bottom: 0;
+}
+
+/* 脇役の時はさらに引く */
+.split-container.tasks .live2d-model {
+  transform: translateX(-50%) scale(0.7);
+  bottom: 10%;
 }
 
 .bubble {
   position: absolute;
-  top: 10px;
-  right: 10px; /* neutralの時も端に表示 */
-  max-width: 150px;
+  top: 15%; /* 位置調整 */
+  right: 5%;
+  max-width: 60%;
   background: #fff;
-  padding: 8px 12px;
-  border-radius: 15px 15px 0 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  font-size: 0.8rem;
+  padding: 15px 20px;
+  border-radius: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  font-size: 1rem;
   color: #333;
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 20; /* 常に一番手前 */
+  font-weight: bold;
+  z-index: 20;
 }
 
 /* リストアイテム */
@@ -243,14 +253,22 @@ const characterMessage = computed(() => {
 .task-list li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #fff;
-  margin-bottom: 8px;
-  padding: 8px 10px; /* neutralでも見やすいように少しパディング調整 */
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  font-size: 0.9rem;
+  gap: 15px;
+  background: #f9f9f9;
+  margin-bottom: 12px;
+  padding: 15px; /* タップしやすいように大きく */
+  border-radius: 12px;
+  font-size: 1rem;
 }
 .done { text-decoration: line-through; color: #bbb; }
-.del-btn { margin-left: auto; background: #ffecec; color: #ff6b6b; border:none; border-radius:4px; cursor:pointer; font-size: 0.8rem; padding: 2px 6px;}
+.del-btn { 
+  margin-left: auto; 
+  width: 30px; 
+  height: 30px; 
+  border-radius: 50%; 
+  background: #eee; 
+  color: #888; 
+  border:none; 
+  display:flex; align-items:center; justify-content:center;
+}
 </style>
