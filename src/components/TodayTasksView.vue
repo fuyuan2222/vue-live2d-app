@@ -115,8 +115,8 @@ const characterMessage = computed(() => {
 }
 
 .pane-content {
-  width: 100%;
-  height: 100%;
+  width: 120%;
+  height: 120%;
   position: relative;
 }
 
@@ -170,7 +170,7 @@ const characterMessage = computed(() => {
   margin: 15px;
   font-size: 1.1rem;
   font-weight: bold;
-  color: #444;
+  color: #fff;
   white-space: nowrap;
 }
 
