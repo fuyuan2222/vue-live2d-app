@@ -108,6 +108,7 @@ const characterMessage = computed(() => {
   opacity: 1;
   transform: scale(1); 
   z-index: 1;
+  background-color: #fff;
 }
 
 .pane-content {
