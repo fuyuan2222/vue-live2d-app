@@ -5,11 +5,11 @@
       <Live2DModel
         :emotion="getEmotion"
         :personality="characterPersonality"
-        :hairstyle="characterHairstyle"
-        :outfit="characterOutfit"
-        :accessory="characterAccessory"
+        :front-hairstyle="characterFrontHairstyle"
+        :back-hairstyle="characterBackHairstyle"
+        :eyes="characterEyes" 
       />
-    </div>
+      </div>
 
     <div class="customization-options">
       <div class="option-group">
@@ -18,33 +18,34 @@
           <option value="元気系">元気系</option>
           <option value="癒し系">癒し系</option>
           <option value="クール系">クール系</option>
-          <option value="ツンデレ系">ツンデレ系</option>
-          <option value="オタク共感系">オタク共感系</option>
         </select>
       </div>
+
       <div class="option-group">
-        <h3>髪型</h3>
-        <select v-model="characterHairstyle">
+        <h3>後ろ髪</h3>
+        <select v-model="characterBackHairstyle">
           <option value="ロング">ロング</option>
           <option value="ボブ">ボブ</option>
           <option value="ショート">ショート</option>
           <option value="ツイン">ツイン</option>
         </select>
       </div>
+
       <div class="option-group">
-        <h3>服装</h3>
-        <select v-model="characterOutfit">
-          <option value="元気カジュアル系">元気カジュアル系</option>
-          <option value="かわいめスポーティ系">かわいめスポーティ系</option>
-          <option value="ナチュラル親しみ系">ナチュラル親しみ系</option>
+        <h3>前髪</h3>
+        <select v-model="characterFrontHairstyle">
+          <option value="ぱっつん">ぱっつん</option>
+          <option value="３つ分け">３つ分け</option>
+          <option value="２・８分け">２．８分け</option>
         </select>
       </div>
+
       <div class="option-group">
-        <h3>小物</h3>
-        <select v-model="characterAccessory">
-          <option value="なし">なし</option>
-          <option value="メガネ">メガネ</option>
-          <option value="イヤホン">イヤホン</option>
+        <h3>目</h3>
+        <select v-model="characterEyes">
+          <option value="丸目">丸目</option>
+          <option value="たれ目">たれ目</option>
+          <option value="釣り目">釣り目</option>
         </select>
       </div>
     </div>
@@ -53,19 +54,23 @@
 
 <script setup>
 import { inject, computed } from 'vue'
-import Live2DModel from './Live2DModel.vue'
+import Live2DModel from './Live2DView.vue'
 
+// ここで inject しているデータがリアクティブ（ref）であることを前提とします
 const {
   characterPersonality,
-  characterHairstyle,
-  characterOutfit,
-  characterAccessory
+  characterFrontHairstyle,
+  characterBackHairstyle,
+  characterEyes
+  // もし outfit や accessory も使うならここに追加し、親で provide する必要があります
 } = inject('character-data');
 
 const { tasks } = inject('task-data');
 
 const getEmotion = computed(() => {
-  if (!tasks.value) return 'idle';
+  // tasks が undefined の場合のガードを入れるとより安全です
+  if (!tasks || !tasks.value) return 'idle'; 
+  
   const completed = tasks.value.filter(t => t.done).length
   if (tasks.value.length === 0) return 'idle'
   if (completed === tasks.value.length) return 'celebrate'
