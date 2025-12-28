@@ -37,7 +37,7 @@ body {
 .main-content {
   width: 100%;
   /* メニューバーの高さ（約70〜80px）＋少し余裕を持たせた余白 */
-  padding-bottom: 200px; 
+  margin-bottom: 200px; 
   
   /* paddingを含めてサイズ計算する（これがないとレイアウトが崩れる） */
   box-sizing: border-box; 
