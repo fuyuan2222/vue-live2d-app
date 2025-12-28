@@ -1,36 +1,25 @@
 <template>
   <div class="home">
-    
-    <div class="background-layer">
-      <Live2DView :emotion="getEmotion" />
-    </div>
+    <Navigation class="side-nav" :active-tab="activeTab" :unread-count="unreadCount" @change-tab="activeTab = $event" />
 
-    <div class="glass-board">
-      
-      <Navigation class="side-nav" :active-tab="activeTab" :unread-count="unreadCount" @change-tab="activeTab = $event" />
+    <main class="main-content">
+      <header v-if="activeTab !== 'tasks'">
+      </header>
 
-      <main class="main-content">
-        <header class="message-header">
-           <p class="char-msg">{{ characterMessage }}</p>
-        </header>
+      <TodayTasksView v-if="activeTab === 'tasks'" />
+      <AllTasksView v-else-if="activeTab === 'all-tasks'" />
+      <CharacterView v-else-if="activeTab === 'character'" />
+      <CategoriesView v-else-if="activeTab === 'categories'" />
+      <NotificationsView v-else-if="activeTab === 'notifications'" />
+    </main>
 
-        <TodayTasksView v-if="activeTab === 'tasks'" />
-        <AllTasksView v-else-if="activeTab === 'all-tasks'" />
-        <CharacterView v-else-if="activeTab === 'character'" />
-        <CategoriesView v-else-if="activeTab === 'categories'" />
-        <NotificationsView v-else-if="activeTab === 'notifications'" />
-      </main>
-
-      <Navigation class="bottom-nav" :active-tab="activeTab" :unread-count="unreadCount" @change-tab="activeTab = $event" />
-
-    </div> </div>
+    <Navigation class="bottom-nav" :active-tab="activeTab" :unread-count="unreadCount" @change-tab="activeTab = $event" />
+  </div>
 </template>
 
 <script setup>
 import './assets/global.css'
 import { ref, watch, onMounted, provide, computed } from 'vue'
-
-// コンポーネントのインポート
 import TodayTasksView from './components/TodayTasksView.vue'
 import AllTasksView from './components/AllTasksView.vue'
 import CharacterView from './components/CharacterView.vue'
@@ -38,16 +27,12 @@ import CategoriesView from './components/CategoriesView.vue'
 import NotificationsView from './components/NotificationsView.vue'
 import Navigation from './components/common/Navigation.vue'
 
-// ★ Live2Dコンポーネントを追加インポート
-// (ファイルパスは実際の場所に合わせ 'src/components/Live2DView.vue' 等に修正してください)
-import Live2DView from './components/Live2DView.vue'
-
 // --- データと状態 ---
 const tasks = ref([])
 const categories = ref(['仕事', '勉強', '趣味', '未分類'])
 const notifications = ref([])
 
-// --- キャラクター設定 ---
+// --- キャラクター設定  ---
 const characterPersonality = ref('元気系')
 const characterFrontHairstyle = ref('ぱっつん') 
 const characterBackHairstyle = ref('ロング')    
@@ -58,25 +43,9 @@ const characterAccessory = ref('なし')
 const newDueDate = ref(new Date().toISOString().substr(0, 10))
 const activeTab = ref('tasks')
 
-// --- ★追加: キャラクターの感情ロジック ---
-const getEmotion = computed(() => {
-  const completed = tasks.value.filter(t => t.done).length
-  // タスクが空または未完了ばかりなら通常、少し終わってれば笑顔、全部完了なら大喜び
-  if(completed === 0) return 'idle'
-  if(completed < tasks.value.length) return 'smile'
-  return 'celebrate'
-})
 
-// --- ★追加: キャラクターのメッセージロジック ---
-const characterMessage = computed(() => {
-  const left = tasks.value.filter(t => !t.done).length
-  if(tasks.value.length === 0) return 'タスクを追加してね！'
-  if(left === 0) return '全部終わったね！えらい！🎉'
-  if(left < 3) return 'あとちょっと！がんばろう💪'
-  return '一緒にがんばろう！✨'
-})
+// --- メソッド ---
 
-// --- メソッド (元のまま) ---
 const addTask = (task) => {
     tasks.value.push({ 
         ...task, 
@@ -186,13 +155,14 @@ onMounted(() => {
         })
     }
     
-    // キャラクターデータの読み込み
+    // キャラクターデータの読み込み（互換性対応）
     if (savedCharacter) {
         const charData = JSON.parse(savedCharacter)
         characterPersonality.value = charData.personality || '元気系'
         characterOutfit.value = charData.outfit || '元気カジュアル系'
         characterAccessory.value = charData.accessory || 'なし'
         
+        // 旧データ(hairstyle)がある場合は後ろ髪に適用し、前髪はデフォルトにする等の移行処理
         characterBackHairstyle.value = charData.backHairstyle || charData.hairstyle || 'ロング'
         characterFrontHairstyle.value = charData.frontHairstyle || 'ぱっつん'
         characterEyes.value = charData.eyes || '丸目'
@@ -201,6 +171,7 @@ onMounted(() => {
     setInterval(monitorReminders, 60000)
 })
 
+// タスク保存の監視
 watch(tasks, (val) => {
     const serializableTasks = val.map(task => ({
         ...task,
@@ -209,6 +180,7 @@ watch(tasks, (val) => {
     localStorage.setItem('tasks', JSON.stringify(serializableTasks))
 }, { deep: true })
 
+// キャラクター設定保存の監視 (追加)
 watch(
   [characterPersonality, characterFrontHairstyle, characterBackHairstyle, characterEyes, characterOutfit, characterAccessory],
   () => {
@@ -229,11 +201,12 @@ const unreadCount = computed(() => {
     return notifications.value.filter(note => !note.read).length
 })
 
-// --- provide/inject ---
+// --- provide/injectでデータを共有 (修正: 新しい変数を渡す) ---
 provide('task-data', { tasks, addTask, removeTask, newDueDate })
 provide('category-data', { categories, addCategory, removeCategory })
 provide('notification-data', { notifications, addNotification, markAllAsRead, todos: tasks })
 
+// ここを修正: 新しいパーツ変数をprovideする
 provide('character-data', { 
   characterPersonality, 
   characterFrontHairstyle, 
