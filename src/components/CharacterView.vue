@@ -83,16 +83,41 @@ const getEmotion = computed(() => {
 .character-customization {
   display: flex;
   flex-direction: column;
+  /* 画面の高さいっぱいを使う */
   height: 100%;
+  
+  /* ★重要：メニューバーに被らないように下に余白をたっぷり入れる */
+  padding-bottom: 120px; 
+  
+  /* 画面が小さくて入り切らない場合はスクロールさせる */
+  overflow-y: auto; 
+  box-sizing: border-box;
+  
+  /* 余白調整 */
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+h2 {
+  text-align: center;
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+  color: #333;
 }
 
 .live2d-preview-container {
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  
+  /* 画面の余ったスペースを使うが、設定項目を圧迫しすぎないようにする */
   flex-grow: 1;
+  min-height: 200px; /* 最低限の高さを確保 */
+  
   position: relative;
-  overflow: hidden;
+  /* Live2Dがはみ出しても表示崩れしないように */
+  overflow: visible; 
   margin-bottom: 20px;
 }
 
@@ -101,31 +126,50 @@ const getEmotion = computed(() => {
   /* スマホ、PC共に2列で表示 */
   grid-template-columns: repeat(2, 1fr);
   gap: 15px;
+  
+  /* フォーム周りが狭くならないように */
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto; /* 中央寄せ */
 }
 
 .option-group h3 {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-size: 14px;
-  color: #333;
+  font-weight: bold;
+  color: #555;
 }
 
 .option-group select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
   width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px; /* 角丸を強めにして今のUIに合わせる */
+  background-color: #f9f9f9;
+  font-size: 16px; /* スマホでズームされないサイズ */
+  color: #333;
+  outline: none;
   box-sizing: border-box;
+  
+  /* オレンジのテーマカラーに合わせるなら */
+  border-left: 4px solid #FFB74D;
+}
+
+.option-group select:focus {
+  background-color: #fff;
+  border-color: #FF9800;
 }
 
 /* PC版（768px以上）のスタイル調整 */
 @media (min-width: 768px) {
   .live2d-preview-container {
-    height: 300px;
+    height: 400px; /* 固定高さにして安定させる */
+    flex-grow: 0;
     margin-bottom: 30px;
   }
   .customization-options {
-    gap: 30px; /* PC版ではギャップを広げる */
+    gap: 30px;
+    grid-template-columns: repeat(4, 1fr); /* 横一列にするなど */
   }
   .option-group h3 {
     font-size: 16px;
