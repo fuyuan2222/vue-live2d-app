@@ -59,7 +59,7 @@ onMounted(async () => {
 
   // 3. サイズ・位置調整
   model.x = 250;
-  model.y = 600;
+  model.y = 700;
   model.anchor.set(0.5, 0.5);
   model.scale.set(0.4);
 
