@@ -3,7 +3,10 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    
+    /* 修正1: Viteプロジェクトの標準は "bundler" です（古いTSなら "node"） */
+    "moduleResolution": "bundler",
+
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
@@ -12,7 +15,12 @@
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
+    
     "allowJs": true,
+
+    /* 修正2: これがないと「入力ファイルを上書きしてしまう」というエラーが出ます */
+    "noEmit": true,
+
     "baseUrl": ".",
     "strictNullChecks": false,
     "paths": {
