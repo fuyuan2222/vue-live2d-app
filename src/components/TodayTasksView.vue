@@ -210,18 +210,24 @@ const characterMessage = computed(() => {
   width: 100%;
   height: 100%;
   position: absolute;
-  /* ★修正：拡大しすぎない＆少し下げることで頭上のスペースを確保 */
-  bottom: -40px; 
+  
+  /* ★ここを変更！数値を大きく変えます */
+  /* scale(2.2) で2倍以上に拡大 */
+  /* bottom: -25% で体を画面外に押し出し、顔を枠内に収める */
+  bottom: -25%; 
   left: 50%;
-  transform: translateX(-50%) scale(1.0); /* 等倍に戻す */
-  transition: transform 0.5s;
-  pointer-events: none; /* キャラがタップを邪魔しないように */
+  transform: translateX(-50%) scale(2.2); 
+  
+  transition: all 0.5s cubic-bezier(0.2, 0, 0, 1); /* 動きをスムーズに */
+  pointer-events: none;
 }
 
-/* 脇役の時は少し小さく */
+/* 脇役（タスク操作中）の時は、少しだけ引く */
 .split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.8);
-  bottom: -20px;
+  /* 脇役の時も、あまり小さくしすぎない方が寂しくないです */
+  transform: translateX(-50%) scale(1.8);
+  bottom: -20%;
+  opacity: 0.8; /* 少し透ける */
 }
 
 /* 吹き出し（セリフ） */
