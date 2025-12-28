@@ -92,7 +92,7 @@ const characterMessage = computed(() => {
   
   position: relative;
   gap: 0;
-  padding: 0;
+  padding-bottom: 50px;
   overflow: hidden;
   background-color: #ffffff;
   color-scheme: light; 
