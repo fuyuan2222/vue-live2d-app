@@ -1,6 +1,7 @@
 <template>
   <div class="home">
     <header>
+      
 
       <p>{{ characterMessage }}</p>
       
@@ -33,9 +34,7 @@
       <section v-if="activeTab === 'tasks'" class="today-tasks-section">
         <h2>本日のタスク</h2>
         
-        <div class="live2d-container">
-          <Live2DModel :emotion="getEmotion" />
-        </div>
+        
 
         <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
           本日のタスクはありません！
@@ -210,7 +209,7 @@
 <script setup>
 import '../assets/home.css'
 import { ref, computed, watch, onMounted } from 'vue'
-import Live2DModel from './Live2DModel.vue'
+import Live2DView from './Live2DView.vue'
 
 // --- タスクデータ ---
 const newTask = ref('')
