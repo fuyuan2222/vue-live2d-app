@@ -163,37 +163,39 @@ const characterMessage = computed(() => {
 </script>
 
 <style scoped>
-/* コンテナ：外側の余白は少し残しつつ、中身の隙間(gap)をゼロにする */
+/* コンテナ：画面の底まで突き抜ける */
 .split-container {
   display: flex;
   width: 100%;
-  height: 100%;
+  
+  /* ★修正：画面の高さ100%使い切る！ */
+  height: 100dvh; 
+  
   position: relative;
-  /* ★重要：隙間をなくしてくっつける */
-  gap: 0; 
-  /* 画面端からの余白 */
-  padding: 10px; 
-  box-sizing: border-box;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* === 共通パネル設定 === */
 .pane {
+  position: relative;
   overflow: hidden;
   cursor: pointer;
-  position: relative;
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
   
-  /* ガラス風デザイン */
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  /* 枠をくっつけるので、重なった部分の線を消す工夫 */
-  box-shadow: none; 
-
+  /* 完全な「見えない枠」 */
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  
+  transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
+  
   /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
   transform: scale(1);
-  z-index: 5;
+  z-index: 1;
 }
 
 .pane-content {
@@ -202,45 +204,31 @@ const characterMessage = computed(() => {
   position: relative;
 }
 
-/* === 左右の結合デザイン === */
+/* === 左右のデザイン === */
 
-/* 左パネル：右側の角を直角にする */
+/* 左：タスクパネル */
 .task-pane {
-  border-radius: 20px 0 0 20px;
-  border-right: none; /* 境界線を消す */
-  background: rgba(255, 255, 255, 0.9);
+  background: #ffffff;
 }
 
-/* 右パネル：左側の角を直角にする */
+/* 右：キャラパネル */
 .char-pane {
-  border-radius: 0 20px 20px 0;
-  border-left: 1px solid rgba(0,0,0,0.1); /* 薄い境界線を入れる */
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-/* 全体に影をつける（コンテナに対してではなくパネルの背面に疑似要素などでつけるのが綺麗ですが、簡易的にパネルにつけます） */
-.split-container {
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
-  padding-bottom: 100px;
+  background: linear-gradient(180deg, #f0f4f8 0%, #ffffff 100%);
 }
 
 
 /* === 動作時のスタイル === */
 
 /* タスク主役 */
-.split-container.tasks .task-pane {
-  flex: 4; 
-}
+.split-container.tasks .task-pane { flex: 9; }
 .split-container.tasks .char-pane {
-  flex: 1; 
-  background: #ddd; /* 暗くして非アクティブ感を出す */
+  flex: 1;
+  background: #e0e0e0;
+  filter: grayscale(50%);
 }
 
 /* キャラ主役 */
-.split-container.char .char-pane {
-  flex: 4;
-  background: #fff; /* 明るく */
-}
+.split-container.char .char-pane { flex: 9; }
 .split-container.char .task-pane {
   flex: 1;
   background: #eee;
@@ -250,83 +238,92 @@ const characterMessage = computed(() => {
 /* === 中身のパーツ調整 === */
 
 .pane-title {
-  margin: 15px;
-  font-size: 1.1rem;
+  margin: 40px 20px 20px 20px; /* 上の余白も少しリッチに */
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #444;
+  color: #333;
   white-space: nowrap;
 }
 
 .task-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 15px 15px 15px;
-  scrollbar-width: thin;
+  
+  /* ★重要：下にたっぷりと余白(100px)を入れることで、
+     一番下のタスクがメニューバーに隠れずスクロールできるようになる */
+  padding: 0 20px 100px 20px;
+  
+  scrollbar-width: none;
 }
+.task-scroll-area::-webkit-scrollbar { display: none; }
 
-/* 縮んだ時に中身を隠す */
+/* 縮んだ時に中身を消す */
 .split-container.char .task-scroll-area,
 .split-container.char .pane-title {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
+  transition: opacity 0.1s;
 }
 
+/* ラベル */
 .inactive-label {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
-  font-weight: bold;
-  color: #999;
-  font-size: 0.8rem;
-  letter-spacing: 2px;
+  font-weight: 900;
+  color: #ccc;
+  font-size: 1.0rem;
+  letter-spacing: 4px;
 }
 
-/* === Live2Dモデル 全身表示設定 === */
+/* === Live2Dモデル === */
 .live2d-model {
   width: 100%;
   height: 100%;
   position: absolute;
-  /* ★全身を見せるための調整
-     scale(0.65): 小さくして全身を入れる
-     bottom: -20px: 足元を少しだけ切るか、ぴったり合わせる
-  */
-  bottom: -20px; 
+  
+  /* ★枠が大きくなったので、位置調整 */
+  /* メニューバーの後ろまでキャラがいるように見せるため bottom: 0 */
+  bottom: 0; 
   left: 50%;
-  transform: translateX(-50%) scale(0.65); 
+  transform: translateX(-50%) scale(0.85); /* 全身が見えるサイズ */
   
   transition: transform 0.5s;
   pointer-events: none;
 }
 
-/* キャラ主役の時は、少し大きくしてあげる */
-.split-container.char .live2d-model {
-  transform: translateX(-50%) scale(0.75); /* 少しズーム */
-  bottom: -40px;
+/* neutral */
+.split-container.neutral .live2d-model {
+  transform: translateX(-50%) scale(0.85);
 }
 
-/* タスク主役（脇役）の時は、さらに小さくして全身を残す */
+/* キャラ主役（拡大） */
+.split-container.char .live2d-model {
+  transform: translateX(-50%) scale(1.0); /* ドーンと大きく */
+  bottom: -5%; /* 少し下げて顔を近づける */
+}
+
+/* タスク主役（縮小） */
 .split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.55);
-  bottom: 0;
-  opacity: 0.7;
+  transform: translateX(-50%) scale(0.65);
+  bottom: 5%; /* メニューバーの上にちょこんと乗る感じ */
+  opacity: 0.6;
 }
 
 /* 吹き出し */
 .bubble {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 15%;
+  right: 5%;
+  max-width: 60%;
   background: #fff;
-  padding: 8px 10px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  font-size: 0.8rem;
+  padding: 12px 18px;
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  font-size: 0.9rem;
   color: #333;
-  text-align: center;
   z-index: 20;
   animation: float 3s ease-in-out infinite;
 }
@@ -334,17 +331,16 @@ const characterMessage = computed(() => {
 .bubble::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px 6px 0;
+  bottom: -8px;
+  right: 20px;
+  border-width: 8px 8px 0;
   border-style: solid;
   border-color: #fff transparent transparent transparent;
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  50% { transform: translateY(-5px); }
 }
 
 /* リストアイテム */
@@ -352,14 +348,12 @@ const characterMessage = computed(() => {
 .task-list li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #fff;
-  margin-bottom: 8px;
-  padding: 8px 10px;
+  gap: 15px;
+  background: #f8f9fa;
+  margin-bottom: 10px;
+  padding: 15px;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  font-size: 0.9rem;
 }
 .done { text-decoration: line-through; color: #bbb; }
-.del-btn { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; background: #f0f0f0; color: #888; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.del-btn { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: #eee; color: #888; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
 </style>
