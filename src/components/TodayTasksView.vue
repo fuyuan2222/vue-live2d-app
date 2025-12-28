@@ -221,6 +221,7 @@ const characterMessage = computed(() => {
 /* 全体に影をつける（コンテナに対してではなくパネルの背面に疑似要素などでつけるのが綺麗ですが、簡易的にパネルにつけます） */
 .split-container {
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
+  padding-bottom: 100px;
 }
 
 
