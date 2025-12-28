@@ -191,8 +191,7 @@ const characterMessage = computed(() => {
   /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
-  
-  /* ★修正：scale(3)になっていたのを1に戻しました（3だと拡大されすぎて壊れます） */
+
   transform: scale(1); 
   z-index: 1;
 }
@@ -200,6 +199,7 @@ const characterMessage = computed(() => {
 .pane-content {
   width: 100%;
   height: 100%;
+  padding: 5px;
   position: relative;
 }
 
