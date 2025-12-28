@@ -168,8 +168,7 @@ const characterMessage = computed(() => {
   display: flex;
   width: 100%;
   
-  /* ★修正：画面の高さ100%使い切る！ */
-  height: 100dvh; 
+   height: 100dvh; 
   
   position: relative;
   gap: 0;
@@ -194,7 +193,7 @@ const characterMessage = computed(() => {
   /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
-  transform: scale(1);
+  transform: scale(3);
   z-index: 1;
 }
 
@@ -208,12 +207,12 @@ const characterMessage = computed(() => {
 
 /* 左：タスクパネル */
 .task-pane {
-  background: #ffffff;
+
 }
 
 /* 右：キャラパネル */
 .char-pane {
-  background: linear-gradient(180deg, #f0f4f8 0%, #ffffff 100%);
+
 }
 
 

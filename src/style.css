@@ -70,8 +70,4 @@ input[type="text"] {
 .card {
   padding: 0; /* 余計な余白を消す */
 }
-/* App.vue または global.css */
-.main-content {
-  padding: 0 !important; /* 強制的に余白を削除 */
-  overflow: hidden;
-}
+
