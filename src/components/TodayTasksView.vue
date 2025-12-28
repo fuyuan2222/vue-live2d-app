@@ -241,7 +241,7 @@ const characterMessage = computed(() => {
   margin: 40px 20px 20px 20px; /* 上の余白も少しリッチに */
   font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
+  color: #fff;
   white-space: nowrap;
 }
 
@@ -287,8 +287,8 @@ const characterMessage = computed(() => {
   /* ★枠が大きくなったので、位置調整 */
   /* メニューバーの後ろまでキャラがいるように見せるため bottom: 0 */
   bottom: 0; 
-  left: 50%;
-  transform: translateX(-50%) scale(0.85); /* 全身が見えるサイズ */
+  left: 40%;
+  transform: translateX(-50%) scale(1.0); /* 全身が見えるサイズ */
   
   transition: transform 0.5s;
   pointer-events: none;
