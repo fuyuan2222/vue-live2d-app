@@ -103,6 +103,9 @@ const getEmotion = computed(() => {
   gap: 15px;
 }
 
+.option-group{
+  padding-bottom: 20px;
+}
 .option-group h3 {
   margin-bottom: 5px;
   font-size: 14px;
