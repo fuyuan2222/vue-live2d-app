@@ -61,7 +61,7 @@ onMounted(async () => {
   model.x = 250;
   model.y = 600;
   model.anchor.set(0.5, 0.5);
-  model.scale.set(0.5);
+  model.scale.set(0.4);
 
   /* * 以下のイベント関連設定は、システムごと削除したので不要です。
    * 下手記述すると警告の原因になるので削除しています。

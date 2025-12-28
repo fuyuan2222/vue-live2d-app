@@ -67,7 +67,7 @@ const characterMessage = computed(() => {
 <style scoped>
 /* 【最重要】Live2Dを表示するための高さ指定 */
 .live2d-preview-container {
-  width: 500px;
+  width: 100%;
   height: 700px; /* ここに必ず高さを指定してください */
   position: relative;
   background-color: #f9f9f9; /* 領域が見えるように仮の背景色 */
