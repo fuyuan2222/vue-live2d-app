@@ -11,6 +11,9 @@
   -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを消す */
   touch-action: manipulation; /* ダブルタップズームなどを無効化して反応を速くする */
 }
+.main-content{
+  margin-bottom: 50px;
+}
 
 body {
   margin: 0;
