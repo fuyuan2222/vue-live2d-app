@@ -16,7 +16,7 @@
           <ul class="task-list">
             <li v-for="(task, index) in filteredTodayTasks" :key="index">
               <input type="checkbox" v-model="task.done" @click.stop />
-              <span :class="[task.done ? 'done' : '', task.priority]">
+              <span class="task-text" :class="[task.done ? 'done' : '', task.priority]">
                 {{ task.text }}
               </span>
               <button @click.stop="removeTask(index)" class="del-btn">×</button>
@@ -26,10 +26,6 @@
       </div>
     </div>
 
-    <div class="bubble" v-if="currentFocus !== 'tasks'">
-      {{ characterMessage }}
-    </div>
-
     <div class="char-pane pane" @click="setFocus('char')">
       <div class="pane-content">
         <Live2DView 
@@ -37,6 +33,10 @@
           class="live2d-model"
         />
       </div>
+    </div>
+
+    <div class="bubble" v-if="currentFocus !== 'tasks'">
+      {{ characterMessage }}
     </div>
 
   </div>
@@ -81,7 +81,7 @@ const characterMessage = computed(() => {
 </script>
 
 <style scoped>
-/* コンテナ：画面の底まで突き抜ける */
+/* コンテナ */
 .split-container {
   display: flex;
   width: 100%;
@@ -90,6 +90,8 @@ const characterMessage = computed(() => {
   gap: 0;
   padding: 0;
   overflow: hidden;
+  /* ダークモードでも背景が黒くならないように白固定 */
+  background-color: #ffffff; 
 }
 
 /* === 共通パネル設定 === */
@@ -97,16 +99,11 @@ const characterMessage = computed(() => {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  
-  /* 完全な「見えない枠」 */
   border: none;
   border-radius: 0;
   box-shadow: none;
   outline: none;
-  
   transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
-  
-  /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
   transform: scale(1); 
@@ -126,13 +123,10 @@ const characterMessage = computed(() => {
   background: #ffffff;
 }
 
-/* 右：キャラパネル */
+/* 右：キャラパネル（オレンジグラデーション） */
 .char-pane {
-  /* ★修正：オレンジテーマ（淡いオレンジ〜白へのグラデーション） */
-  /* これで肌色も綺麗に見え、左の白画面とも馴染みます */
   background: linear-gradient(180deg, #FFF3E0 0%, #FFFFFF 100%);
 }
-
 
 /* === 動作時のスタイル === */
 
@@ -140,7 +134,6 @@ const characterMessage = computed(() => {
 .split-container.tasks .task-pane { flex: 9; }
 .split-container.tasks .char-pane {
   flex: 1;
-  /* 脇役の時は少し暗くするが、オレンジ味を残す */
   background: #FFE0B2; 
   filter: grayscale(30%);
 }
@@ -152,18 +145,14 @@ const characterMessage = computed(() => {
   background: #f5f5f5;
 }
 
-
 /* === 中身のパーツ調整 === */
 
 .pane-title {
   margin: 40px 20px 20px 20px;
   font-size: 1.2rem;
   font-weight: bold;
-  
-  /* ★修正：背景が白なので、文字は濃いグレー(#333)に変更 */
-  /* 元のコードだと白(#fff)で見えなくなっていました */
-  color: #333; 
-  
+  /* ★ダークモード対策：文字色を濃いグレーに強制固定 */
+  color: #333333 !important; 
   white-space: nowrap;
 }
 
@@ -191,7 +180,6 @@ const characterMessage = computed(() => {
   transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
   font-weight: 900;
-  /* オレンジテーマに合わせて少し色味を入れる */
   color: #FFCC80; 
   font-size: 1.0rem;
   letter-spacing: 4px;
@@ -204,49 +192,47 @@ const characterMessage = computed(() => {
   position: absolute;
   bottom: 0; 
   left: 50%;
-  
-  /* ★修正：ニュートラル時は少し小さくして全身を入れる */
   transform: translateX(-50%) scale(0.95);
-  
   transition: transform 0.5s;
   pointer-events: none;
 }
 
-/* neutral(半々)の時 */
 .split-container.neutral .live2d-model {
   transform: translateX(-50%) scale(0.95);
 }
 
-/* キャラ主役（拡大） */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.1); /* 少し迫力を出す */
+  transform: translateX(-50%) scale(1.1);
   bottom: -5%;
 }
 
-/* タスク主役（縮小） */
 .split-container.tasks .live2d-model {
   transform: translateX(-50%) scale(0.65);
   bottom: 5%;
   opacity: 0.6;
 }
 
-/* 吹き出し */
+/* === 吹き出し（枠の外に配置） === */
 .bubble {
-  position: absolute;
-  top: 12%; /* 位置微調整 */
+  position: absolute; /* 画面全体に対して絶対配置 */
+  top: 15%; /* 高さはお好みで */
   right: 5%;
-  left: auto; /* 左指定を解除 */
-  max-width: 50%;
+  max-width: 50%; /* 横幅制限 */
   
-  background: #fff;
-  padding: 12px 18px;
-  border-radius: 20px;
-  /* 影に少しオレンジ味を足して馴染ませる */
-  box-shadow: 0 5px 15px rgba(255, 152, 0, 0.15); 
+  background: #ffffff;
+  padding: 15px 20px;
+  border-radius: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); /* 影を少し濃く */
   
-  font-size: 0.9rem;
-  color: #333;
-  z-index: 20;
+  font-size: 0.95rem;
+  font-weight: bold;
+  
+  /* ★ダークモード対策：文字色を黒系に強制固定 */
+  color: #333333 !important; 
+  
+  /* 一番手前に表示 */
+  z-index: 100; 
+  
   animation: float 3s ease-in-out infinite;
 }
 
@@ -254,11 +240,11 @@ const characterMessage = computed(() => {
 .bubble::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  right: 20px;
-  border-width: 8px 8px 0;
+  bottom: -10px;
+  right: 30px;
+  border-width: 10px 10px 0;
   border-style: solid;
-  border-color: #fff transparent transparent transparent;
+  border-color: #ffffff transparent transparent transparent;
 }
 
 @keyframes float {
@@ -266,7 +252,7 @@ const characterMessage = computed(() => {
   50% { transform: translateY(-5px); }
 }
 
-/* リストアイテム */
+/* === リストアイテム === */
 .task-list { list-style: none; padding: 0; margin: 0; }
 .task-list li {
   display: flex;
@@ -276,16 +262,42 @@ const characterMessage = computed(() => {
   margin-bottom: 10px;
   padding: 15px;
   border-radius: 12px;
-  /* 枠線を少しオレンジにしてテーマ感を出す */
   border-left: 4px solid #FFE0B2; 
 }
 
-/* 完了済みタスク */
-.done { text-decoration: line-through; color: #bbb; }
+/* ★ダークモード対策：タスクの文字色も強制固定 */
+.task-text {
+  color: #333333 !important;
+  font-weight: 500;
+}
 
-/* 優先度による色分け（オプション） */
-.task-list li:has(.high) { border-left-color: #FF7043; } /* 高：濃いオレンジ */
-.task-list li:has(.medium) { border-left-color: #FFB74D; } /* 中：普通のオレンジ */
+.done { 
+  text-decoration: line-through; 
+  color: #bbbbbb !important; /* 完了済みは薄いグレー */
+}
 
-.del-btn { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: #eee; color: #888; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+/* 優先度 */
+.task-list li:has(.high) { border-left-color: #FF7043; } 
+.task-list li:has(.medium) { border-left-color: #FFB74D; }
+
+.del-btn { 
+  margin-left: auto; 
+  width: 30px; 
+  height: 30px; 
+  border-radius: 50%; 
+  background: #eee; 
+  color: #888; /* アイコン色も固定 */
+  border:none; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  cursor:pointer;
+}
+
+/* タスクがない時の文字 */
+.no-tasks {
+  text-align: center;
+  color: #999 !important;
+  margin-top: 20px;
+}
 </style>
