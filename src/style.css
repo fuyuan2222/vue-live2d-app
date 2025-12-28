@@ -7,47 +7,53 @@
   color: #213547;
   background-color: #ffffff;
   
-  /* スマホの操作感を良くする設定 */
-  -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを消す */
-  touch-action: manipulation; /* ダブルタップズームなどを無効化して反応を速くする */
-}
-.main-content{
-  margin-bottom: 50px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh;
-  /* ↓重要：PC用の「中央寄せ」設定を削除し、上から自然に並ぶようにする */
+  height: 100vh; /* 画面の高さピッタリにする */
   display: block; 
   background-color: #ffffff;
-  overflow-x: hidden; /* 横揺れ防止 */
+  overflow: hidden; /* アプリ内でスクロール制御するので、body自体のスクロールは消す */
 }
 
 /* アプリ全体の枠組み */
 #app {
   width: 100%;
-  max-width: 100%; /* 横幅制限を解除 */
+  height: 100%; /* 高さも100%に */
   margin: 0;
-  padding: 20px; /* スマホの端ギリギリにならないよう少し余白 */
-  box-sizing: border-box; /* paddingを含めたサイズ計算にする */
-  text-align: left; /* 中央揃えではなく左揃え（リストが見やすい） */
+  
+  /* ★ここが一番の修正点：paddingをゼロにする！ */
+  padding: 0; 
+  
+  box-sizing: border-box;
+  text-align: left;
 }
 
-/* 見出しの文字サイズをスマホ向けに調整 */
+/* .main-content の余白も邪魔になる可能性があるのでゼロか調整 */
+.main-content {
+  margin: 0; 
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- 以下、汎用パーツのデザイン --- */
+
 h1 {
-  font-size: 1.8rem; /* 3.2emはデカすぎるので小さく */
-  margin-bottom: 1rem;
-  text-align: center; /* タイトルだけは真ん中でもOK */
+  font-size: 1.5rem;
+  margin: 1rem 0;
+  text-align: center;
 }
 
-/* ボタンを指で押しやすくする（重要！） */
 button {
-  width: 50%; /* 横幅いっぱいに広げる */
-  padding: 12px 16px; /* 指で押しやすい高さ（44px以上推奨） */
-  margin-bottom: 10px; /* ボタン同士がくっつかないように */
+  width: 100%; /* ボタンは基本横いっぱいの方がスマホでは押しやすい */
+  padding: 12px;
+  margin-bottom: 10px;
   font-size: 1rem;
   border-radius: 8px;
   background-color: #f0f0f0;
@@ -56,14 +62,13 @@ button {
 }
 
 button:active {
-  background-color: #e0e0e0; /* 押した感じを出す */
+  background-color: #e0e0e0;
 }
 
-/* 入力欄もタップしやすく */
 input[type="text"] {
   width: 100%;
   padding: 12px;
-  font-size: 16px; /* 16px未満だとiPhoneで勝手にズームしちゃうので対策 */
+  font-size: 16px; 
   border: 1px solid #ccc;
   border-radius: 8px;
   box-sizing: border-box;
@@ -71,6 +76,5 @@ input[type="text"] {
 }
 
 .card {
-  padding: 0; /* 余計な余白を消す */
+  padding: 0;
 }
-
