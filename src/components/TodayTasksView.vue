@@ -243,7 +243,7 @@ const characterMessage = computed(() => {
   font-weight: bold;
   
   /* ★修正：背景が白なので、文字色は濃いグレー(#333)に戻します */
-  color: #333; 
+  color: #fff; 
   
   white-space: nowrap;
 }
@@ -283,8 +283,6 @@ const characterMessage = computed(() => {
   height: 100%;
   position: absolute;
   bottom: 0; 
-  
-  /* ★修正：左40%になっていたのを中央(50%)に戻し、サイズも適切に */
   left: 50%;
   transform: translateX(-50%) scale(0.85);
   
@@ -294,7 +292,7 @@ const characterMessage = computed(() => {
 
 /* neutral(半々)の時 */
 .split-container.neutral .live2d-model {
-  transform: translateX(-50%) scale(0.85);
+  transform: translateX(-50%) scale(0.95);
 }
 
 /* キャラ主役（拡大） */
@@ -315,6 +313,7 @@ const characterMessage = computed(() => {
   position: absolute;
   top: 15%;
   right: 5%;
+  left: 5%;
   max-width: 60%;
   background: #fff;
   padding: 12px 18px;
