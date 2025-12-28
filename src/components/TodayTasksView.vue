@@ -6,7 +6,7 @@
         <h2 class="pane-title">📝 本日のタスク</h2>
         
         <div class="inactive-label" v-if="currentFocus === 'char'">
-          <span>TAP TO OPEN</span>
+          <span>OPEN</span>
         </div>
 
         <div class="task-scroll-area">
@@ -48,16 +48,14 @@ import Live2DView from './Live2DView.vue'
 
 const { tasks, removeTask } = inject('task-data')
 
-// ★修正点1: 初期状態を 'neutral' (半々) に設定
+// 初期状態は 'neutral' (半々)
 const currentFocus = ref('neutral')
 
-// ★修正点2: トグル機能（同じものを押したら元に戻す）を追加
 const setFocus = (target) => {
+  // 同じ場所をタップしたら 'neutral' に戻す（トグル動作）
   if (currentFocus.value === target) {
-    // すでに開いている方をタップしたら、ニュートラルに戻す
     currentFocus.value = 'neutral'
   } else {
-    // 違う方をタップしたら、そっちを開く
     currentFocus.value = target
   }
 }
@@ -82,38 +80,38 @@ const characterMessage = computed(() => {
   return '一緒にがんばろう！✨'
 })
 </script>
+
 <style scoped>
-/* コンテナ：余白ゼロで画面いっぱいに */
+/* コンテナ：カード型のレイアウト（余白あり） */
 .split-container {
   display: flex;
   width: 100%;
-  /* ナビゲーションバーの高さを引いた分だけ確保（調整してください） */
-  height: 100%; 
+  height: 100%; /* 親の高さに合わせる */
   position: relative;
-  /* gapとpaddingを削除して隙間をなくす */
-  gap: 0; 
-  padding: 0;
-  overflow: hidden;
+  /* ★ここを戻しました：隙間と余白を作る */
+  gap: 15px; 
+  padding: 15px; 
+  box-sizing: border-box;
 }
 
 /* === 共通パネル設定 === */
 .pane {
-  position: relative;
+  border-radius: 20px; /* ★ここを戻しました：角丸 */
   overflow: hidden;
   cursor: pointer;
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
   
-  /* 角丸をなくしてソリッドに */
-  border-radius: 0;
-  border: none; /* 枠線も消す */
-  
-  /* アニメーション */
-  transition: all 0.5s cubic-bezier(0.2, 0, 0, 1); /* キビキビ動く */
-  
+  /* ガラス風デザイン */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+
   /* デフォルト(neutral) */
   flex: 1;
   opacity: 1;
   transform: scale(1);
-  z-index: 1;
+  z-index: 5;
 }
 
 .pane-content {
@@ -126,126 +124,142 @@ const characterMessage = computed(() => {
 
 /* --- 左：タスクパネル --- */
 .task-pane {
-  background: #ffffff; /* 完全な白 */
+  background: rgba(255, 255, 255, 0.85);
   display: flex;
   flex-direction: column;
-  /* 境界線だけ引いておく */
-  border-right: 1px solid rgba(0,0,0,0.1);
 }
 
-/* タスク主役：画面の9割を占める */
+/* タスク主役 */
 .split-container.tasks .task-pane {
-  flex: 9; 
+  flex: 5; 
   z-index: 10;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
-/* タスク脇役：端っこに少しだけ残る */
+/* タスク脇役（キャラモード時） */
 .split-container.char .task-pane {
   flex: 1; 
-  opacity: 0.8;
-  /* 暗くして「今は触れないよ」感を出す */
-  background: #f0f0f0; 
-  filter: brightness(0.9);
+  transform: scale(0.95); /* 少し小さく */
+  opacity: 0.6;
+  z-index: 1;
+  filter: blur(1px);
 }
 
 /* --- 右：キャラパネル --- */
 .char-pane {
-  /* 背景を画面いっぱいに */
-  background: linear-gradient(180deg, #e0f7fa 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 /* キャラ主役 */
 .split-container.char .char-pane {
-  flex: 9;
+  flex: 5;
+  background: #fff;
   z-index: 10;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
-/* キャラ脇役 */
+/* キャラ脇役（タスクモード時） */
 .split-container.tasks .char-pane {
   flex: 1;
-  opacity: 0.8;
-  filter: brightness(0.9) blur(2px); /* ぼかして奥っぽく */
+  transform: scale(0.95);
+  opacity: 0.6;
+  z-index: 1;
+  filter: grayscale(20%);
 }
-
 
 /* === 中身のパーツ調整 === */
 
 .pane-title {
-  margin: 20px;
-  font-size: 1.4rem; /* 文字も大きく */
+  margin: 15px;
+  font-size: 1.1rem;
   font-weight: bold;
-  color: #333;
+  color: #444;
   white-space: nowrap;
 }
 
 .task-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 80px 20px; /* 下の方はナビゲーションと被らないように余白多め */
-  scrollbar-width: none; /* スクロールバーも隠してスッキリさせる */
-}
-.task-scroll-area::-webkit-scrollbar {
-  display: none;
+  padding: 0 15px 15px 15px;
+  scrollbar-width: thin;
 }
 
-/* 縮んだ時に中身を消す */
+/* 縮んだ時に中身を隠す */
 .split-container.char .task-scroll-area,
 .split-container.char .pane-title {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.1s; /* 素早く消す */
+  transition: opacity 0.2s;
 }
 
-/* 「TAP」の文字を大きくスタイリッシュに */
 .inactive-label {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(90deg);
   white-space: nowrap;
-  font-weight: 900;
-  color: #ccc;
-  font-size: 1.2rem;
-  letter-spacing: 5px;
-  text-transform: uppercase;
+  font-weight: bold;
+  color: #888;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
 }
 
-/* Live2Dモデル：画面いっぱいに表示 */
+/* Live2Dモデルの位置調整 */
 .live2d-model {
   width: 100%;
   height: 100%;
   position: absolute;
-  bottom: -5%; /* 足元を少し切るくらいで大きく見せる */
+  /* ★修正：拡大しすぎない＆少し下げることで頭上のスペースを確保 */
+  bottom: -40px; 
   left: 50%;
-  transform: translateX(-50%) scale(1.1); /* ★1.1倍に拡大して迫力を出す */
+  transform: translateX(-50%) scale(1.0); /* 等倍に戻す */
   transition: transform 0.5s;
+  pointer-events: none; /* キャラがタップを邪魔しないように */
 }
 
-/* neutralの時は少し引く */
-.split-container.neutral .live2d-model {
-  transform: translateX(-50%) scale(0.9);
-  bottom: 0;
-}
-
-/* 脇役の時はさらに引く */
+/* 脇役の時は少し小さく */
 .split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.7);
-  bottom: 10%;
+  transform: translateX(-50%) scale(0.8);
+  bottom: -20px;
 }
 
+/* 吹き出し（セリフ） */
 .bubble {
   position: absolute;
-  top: 15%; /* 位置調整 */
-  right: 5%;
-  max-width: 60%;
+  /* ★修正：一番上に配置して顔と被らないようにする */
+  top: 15px; 
+  left: 15px;
+  right: 15px; /* 横幅いっぱいにしないための制限 */
+  
   background: #fff;
-  padding: 15px 20px;
-  border-radius: 30px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  font-size: 1rem;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-size: 0.85rem;
   color: #333;
-  font-weight: bold;
-  z-index: 20;
+  text-align: center;
+  z-index: 20; /* 確実に手前 */
+  
+  /* ふわふわアニメーション */
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 吹き出しのしっぽ */
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px 8px 0;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 /* リストアイテム */
@@ -253,22 +267,13 @@ const characterMessage = computed(() => {
 .task-list li {
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: #f9f9f9;
-  margin-bottom: 12px;
-  padding: 15px; /* タップしやすいように大きく */
-  border-radius: 12px;
-  font-size: 1rem;
+  gap: 10px;
+  background: #fff;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .done { text-decoration: line-through; color: #bbb; }
-.del-btn { 
-  margin-left: auto; 
-  width: 30px; 
-  height: 30px; 
-  border-radius: 50%; 
-  background: #eee; 
-  color: #888; 
-  border:none; 
-  display:flex; align-items:center; justify-content:center;
-}
+.del-btn { margin-left: auto; width: 24px; height: 24px; border-radius: 50%; background: #f0f0f0; color: #888; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
 </style>
