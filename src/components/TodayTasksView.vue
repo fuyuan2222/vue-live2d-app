@@ -80,6 +80,88 @@ const characterMessage = computed(() => {
 })
 </script>
 
+<template>
+  <div class="split-container" :class="currentFocus">
+    
+    <div class="task-pane pane" @click="setFocus('tasks')">
+      <div class="pane-content">
+        <h2 class="pane-title">📝 本日のタスク</h2>
+        
+        <div class="inactive-label" v-if="currentFocus === 'char'">
+          <span>OPEN</span>
+        </div>
+
+        <div class="task-scroll-area">
+          <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
+            タスクなし
+          </div>
+          <ul class="task-list">
+            <li v-for="(task, index) in filteredTodayTasks" :key="index">
+              <input type="checkbox" v-model="task.done" @click.stop />
+              <span :class="[task.done ? 'done' : '', task.priority]">
+                {{ task.text }}
+              </span>
+              <button @click.stop="removeTask(index)" class="del-btn">×</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="char-pane pane" @click="setFocus('char')">
+      <div class="pane-content">
+        <Live2DView 
+          :emotion="getEmotion"
+          class="live2d-model"
+        />
+        
+        <div class="bubble" v-if="currentFocus !== 'tasks'">
+          {{ characterMessage }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { computed, inject, ref } from 'vue'
+import Live2DView from './Live2DView.vue'
+
+const { tasks, removeTask } = inject('task-data')
+
+// 初期状態
+const currentFocus = ref('neutral')
+
+const setFocus = (target) => {
+  if (currentFocus.value === target) {
+    currentFocus.value = 'neutral'
+  } else {
+    currentFocus.value = target
+  }
+}
+
+const filteredTodayTasks = computed(() => {
+  const today = new Date().toISOString().substr(0, 10)
+  return tasks.value.filter(task => task.dueDate === today)
+})
+
+const getEmotion = computed(() => {
+  const completed = tasks.value.filter(t => t.done).length
+  if (tasks.value.length === 0) return 'idle'
+  if (completed === tasks.value.length) return 'celebrate'
+  if (completed > 0) return 'smile'
+  return 'idle'
+})
+
+const characterMessage = computed(() => {
+  const left = tasks.value.filter(t => !t.done).length
+  if (left === 0) return '完了！お疲れ様🎉'
+  if (left < 3) return 'あと少しだよ！'
+  return '今日も頑張ろう✨'
+})
+</script>
+
 <style scoped>
 /* コンテナ：外側の余白は少し残しつつ、中身の隙間(gap)をゼロにする */
 .split-container {
@@ -115,8 +197,8 @@ const characterMessage = computed(() => {
 }
 
 .pane-content {
-  width: 120%;
-  height: 120%;
+  width: 100%;
+  height: 100%;
   position: relative;
 }
 
@@ -170,7 +252,7 @@ const characterMessage = computed(() => {
   margin: 15px;
   font-size: 1.1rem;
   font-weight: bold;
-  color: #fff;
+  color: #444;
   white-space: nowrap;
 }
 
