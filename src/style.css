@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light; /* ライトモード固定 */
+  /* color-scheme: light; ライトモード固定 */
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -50,7 +50,7 @@ h1 {
 
 /* ボタン */
 button {
-  width: 100%;
+  width: 80%;
   padding: 12px;
   margin-bottom: 10px;
   font-size: 1rem;
