@@ -6,55 +6,51 @@
 
   color: #213547;
   background-color: #ffffff;
-  
+
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100vh; /* 画面の高さピッタリにする */
-  display: block; 
-  background-color: #ffffff;
-  overflow: hidden; /* アプリ内でスクロール制御するので、body自体のスクロールは消す */
+  height: 100%;
+  background-color: #ffffff !important;
 }
 
-/* アプリ全体の枠組み */
+body {
+  overflow: hidden;
+}
+
+/* アプリ全体 */
 #app {
   width: 100%;
-  height: 100%; /* 高さも100%に */
-  margin: 0;
-  
-  /* ★ここが一番の修正点：paddingをゼロにする！ */
-  padding: 0; 
-  
+  height: 100%;
+  padding: 0;
   box-sizing: border-box;
   text-align: left;
+  background-color: #ffffff;
 }
 
 .main-content {
   width: 100%;
-  /* メニューバーの高さ（約70〜80px）＋少し余裕を持たせた余白 */
-  margin-bottom: 200px; 
-  
-  /* paddingを含めてサイズ計算する（これがないとレイアウトが崩れる） */
-  box-sizing: border-box; 
-  
-  /* 余計なスクロールを出さない */
-  overflow: hidden; 
+  height: 100%;
+  margin-bottom: 200px; /* 下ナビ分 */
+  box-sizing: border-box;
+  overflow: hidden;
 }
-/* --- 以下、汎用パーツのデザイン --- */
 
+/* 見出し */
 h1 {
   font-size: 1.5rem;
   margin: 1rem 0;
   text-align: center;
 }
 
+/* ボタン */
 button {
-  width: 100%; /* ボタンは基本横いっぱいの方がスマホでは押しやすい */
+  width: 100%;
   padding: 12px;
   margin-bottom: 10px;
   font-size: 1rem;
@@ -68,10 +64,11 @@ button:active {
   background-color: #e0e0e0;
 }
 
+/* 入力 */
 input[type="text"] {
   width: 100%;
   padding: 12px;
-  font-size: 16px; 
+  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-sizing: border-box;
