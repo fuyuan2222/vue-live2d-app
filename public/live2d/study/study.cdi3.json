@@ -2,24 +2,64 @@
 	"Version": 3,
 	"Parameters": [
 		{
-			"Id": "Param3",
+			"Id": "Param25",
 			"GroupId": "",
-			"Name": "ParamPersonality"
+			"Name": "ParamFrontHair_Pattsun"
 		},
 		{
-			"Id": "Param4",
+			"Id": "Param26",
 			"GroupId": "",
-			"Name": "ParamFrontHairStyle"
+			"Name": "ParamFrontHair_Three"
+		},
+		{
+			"Id": "Param27",
+			"GroupId": "",
+			"Name": "ParamFrontHair_TwoEight"
 		},
 		{
 			"Id": "Param13",
 			"GroupId": "",
-			"Name": "ParamBackHairStyle"
+			"Name": "ParamBackHair_Side"
+		},
+		{
+			"Id": "Param28",
+			"GroupId": "",
+			"Name": "ParamBackHair_Short"
+		},
+		{
+			"Id": "Param29",
+			"GroupId": "",
+			"Name": "ParamBackHair_One"
 		},
 		{
 			"Id": "Param14",
 			"GroupId": "",
-			"Name": "ParamEyeStyle"
+			"Name": "ParamEyeStyle_Round"
+		},
+		{
+			"Id": "Param30",
+			"GroupId": "",
+			"Name": "ParamEye_Sharp"
+		},
+		{
+			"Id": "Param31",
+			"GroupId": "",
+			"Name": "ParamEye_Droop"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "",
+			"Name": "Outfit_Power"
+		},
+		{
+			"Id": "Param4",
+			"GroupId": "",
+			"Name": "Outfit_Cool"
+		},
+		{
+			"Id": "Param15",
+			"GroupId": "",
+			"Name": "Outfit_Heal"
 		},
 		{
 			"Id": "Param",
@@ -47,6 +87,16 @@
 			"Name": "左腕（回転）"
 		},
 		{
+			"Id": "Param19",
+			"GroupId": "ParamGroup",
+			"Name": "左腕元気デフォ（回転）"
+		},
+		{
+			"Id": "Param20",
+			"GroupId": "ParamGroup",
+			"Name": "右腕元気デフォ（回転）"
+		},
+		{
 			"Id": "Param2",
 			"GroupId": "ParamGroup",
 			"Name": "右腕（反転）表示"
@@ -72,14 +122,24 @@
 			"Name": "右手首（回転）"
 		},
 		{
-			"Id": "ParamAngleX",
-			"GroupId": "",
-			"Name": "角度 X"
+			"Id": "Param21",
+			"GroupId": "ParamGroup2",
+			"Name": "右腕デフォ（表示）"
 		},
 		{
-			"Id": "ParamAngleY",
-			"GroupId": "",
-			"Name": "角度 Y"
+			"Id": "Param22",
+			"GroupId": "ParamGroup2",
+			"Name": "右腕（回転）"
+		},
+		{
+			"Id": "Param23",
+			"GroupId": "ParamGroup2",
+			"Name": "右腕反転（表示）"
+		},
+		{
+			"Id": "Param24",
+			"GroupId": "ParamGroup2",
+			"Name": "癒し体の回転"
 		},
 		{
 			"Id": "ParamAngleZ",
@@ -112,11 +172,6 @@
 			"Name": "目玉 X"
 		},
 		{
-			"Id": "ParamEyeBallY",
-			"GroupId": "",
-			"Name": "目玉 Y"
-		},
-		{
 			"Id": "ParamBrowRY",
 			"GroupId": "",
 			"Name": "右眉　上下"
@@ -147,59 +202,9 @@
 			"Name": "口　開閉"
 		},
 		{
-			"Id": "ParamCheek",
-			"GroupId": "",
-			"Name": "照れ"
-		},
-		{
-			"Id": "ParamBodyAngleY",
-			"GroupId": "",
-			"Name": "Param_体回転Y_元気"
-		},
-		{
-			"Id": "ParamBodyAngleZ",
-			"GroupId": "",
-			"Name": "Param_体回転Z_元気"
-		},
-		{
-			"Id": "Param15",
-			"GroupId": "",
-			"Name": "Param_体回転Y_癒し"
-		},
-		{
-			"Id": "Param16",
-			"GroupId": "",
-			"Name": "Param_体回転Z_癒し"
-		},
-		{
-			"Id": "Param17",
-			"GroupId": "",
-			"Name": "Param_体回転Y_クール"
-		},
-		{
-			"Id": "Param18",
-			"GroupId": "",
-			"Name": "Param_体回転Z_クール"
-		},
-		{
 			"Id": "ParamBreath",
 			"GroupId": "",
 			"Name": "呼吸"
-		},
-		{
-			"Id": "ParamHairFront",
-			"GroupId": "",
-			"Name": "髪揺れ　前"
-		},
-		{
-			"Id": "ParamHairSide",
-			"GroupId": "",
-			"Name": "髪揺れ　横"
-		},
-		{
-			"Id": "ParamHairBack",
-			"GroupId": "",
-			"Name": "髪揺れ　後"
 		}
 	],
 	"ParameterGroups": [
@@ -207,13 +212,14 @@
 			"Id": "ParamGroup",
 			"GroupId": "",
 			"Name": "元気の腕"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "癒しの腕"
 		}
 	],
 	"Parts": [
-		{
-			"Id": "Part158",
-			"Name": "後ろ髪ショート"
-		},
 		{
 			"Id": "Part157",
 			"Name": "Root"
@@ -269,6 +275,10 @@
 		{
 			"Id": "Part61",
 			"Name": "顔ベース"
+		},
+		{
+			"Id": "Part173",
+			"Name": "服③"
 		},
 		{
 			"Id": "Part155",
@@ -331,12 +341,76 @@
 			"Name": "鼻"
 		},
 		{
+			"Id": "Part169",
+			"Name": "服③ベース.png"
+		},
+		{
+			"Id": "Part158",
+			"Name": "服③中.png"
+		},
+		{
+			"Id": "Part167",
+			"Name": "服③←足.png"
+		},
+		{
+			"Id": "Part164",
+			"Name": "服③→足.png"
+		},
+		{
+			"Id": "Part170",
+			"Name": "服③根本.png"
+		},
+		{
+			"Id": "Part168",
+			"Name": "服③うら.png"
+		},
+		{
+			"Id": "Part165",
+			"Name": "服③←靴.png"
+		},
+		{
+			"Id": "Part162",
+			"Name": "服③→靴.png"
+		},
+		{
+			"Id": "Part172",
+			"Name": "服③袖←デフォ.png"
+		},
+		{
+			"Id": "Part171",
+			"Name": "服③袖→デフォ.png"
+		},
+		{
+			"Id": "Part166",
+			"Name": "服③←手デフォ.png"
+		},
+		{
+			"Id": "Part163",
+			"Name": "服③→手デフォ.png"
+		},
+		{
+			"Id": "Part161",
+			"Name": "服②袖→癒し握る袖↓.png"
+		},
+		{
+			"Id": "Part160",
+			"Name": "服②袖→癒し握る袖↑.png"
+		},
+		{
+			"Id": "Part159",
+			"Name": "→手①癒し握る.png"
+		},
+		{
 			"Id": "Part150",
 			"Name": "服②袖←癒し.png"
 		},
 		{
 			"Id": "Part149",
 			"Name": "服②袖→癒し.png"
+		},
+		{
+			"Id": "Part174",
+			"Name": "服②手→癒し.png"
 		},
 		{
 			"Id": "Part148",
@@ -846,27 +920,5 @@
 			"Id": "Part",
 			"Name": "レイヤー 109 のコピー.png"
 		}
-	],
-	"CombinedParameters": [
-		[
-			"Param8",
-			"Param7"
-		],
-		[
-			"Param10",
-			"Param9"
-		],
-		[
-			"ParamBrowRY",
-			"ParamBrowRForm"
-		],
-		[
-			"ParamBrowLForm",
-			"ParamBrowLY"
-		],
-		[
-			"ParamMouthForm",
-			"ParamMouthOpenY"
-		]
 	]
 }
