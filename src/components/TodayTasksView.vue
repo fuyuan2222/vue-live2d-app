@@ -166,7 +166,7 @@ const characterMessage = computed(() => {
 /* === 吹き出し === */
 .bubble {
   position: absolute; /* 親(char-pane)に対して絶対配置 */
-  top: 80%;
+  top: 70%;
   right: 10%; /* 右端からの距離 */
   width: 200px;
   background: #ffffff;
@@ -186,7 +186,7 @@ const characterMessage = computed(() => {
 .bubble::after {
   content: '';
   position: absolute;
-  bottom: -10px;
+  top: -10px;
   right: 30px;
   border-width: 10px 10px 0;
   border-style: solid;
