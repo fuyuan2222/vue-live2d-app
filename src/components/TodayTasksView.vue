@@ -120,20 +120,20 @@ const characterMessage = computed(() => {
 }
 
 /* [Tasks] タスク主役 */
-.split-container.tasks .task-pane { flex: 9; }
+.split-container.tasks .task-pane { flex: 8; }
 .split-container.tasks .char-pane {
-  flex: 1;
+  flex: 2;
   background: #FFCC80; /* 縮んだ時の色 */
   cursor: pointer;
 }
 
 /* [Char] キャラ主役 */
 .split-container.char .char-pane {
-  flex: 9;
+  flex: 8;
   background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
 }
 .split-container.char .task-pane {
-  flex: 1;
+  flex: 2;
   background: #f5f5f5;
   cursor: pointer;
 }
@@ -156,7 +156,7 @@ const characterMessage = computed(() => {
 
 /* 状態ごとのキャラ調整 */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.4); /* 大きく */
+  transform: translateX(-50%) scale(1.4) translateY(-50%); /* 大きく */
 }
 .split-container.tasks .live2d-model {
   transform: translateX(-50%) scale(0.6); /* 小さく */
@@ -166,7 +166,7 @@ const characterMessage = computed(() => {
 /* === 吹き出し === */
 .bubble {
   position: absolute; /* 親(char-pane)に対して絶対配置 */
-  top: 15%;
+  top: 80%;
   right: 10%; /* 右端からの距離 */
   width: 200px;
   background: #ffffff;
