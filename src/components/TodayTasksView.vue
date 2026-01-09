@@ -190,7 +190,7 @@ const characterMessage = computed(() => {
   right: 30px;
   border-width: 10px 10px 0;
   border-style: solid;
-  border-color: #fff transparent transparent transparent;
+  border-color: transparent transparent #fff transparent;
 }
 
 /* === タスクリストまわり === */
