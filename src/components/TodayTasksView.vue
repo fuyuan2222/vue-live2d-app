@@ -156,7 +156,7 @@ const characterMessage = computed(() => {
 
 /* 状態ごとのキャラ調整 */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.4) translateY(50%); /* 大きく */
+  transform: translateX(-50%) scale(1.4) translateY(10%); /* 大きく */
 }
 .split-container.tasks .live2d-model {
   transform: translateX(-50%) scale(0.6); /* 小さく */
