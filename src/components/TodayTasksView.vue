@@ -1,7 +1,7 @@
 <template>
-  <div class="split-container" :class="currentFocus">
+  <div class="app-root">
     <!-- 左：タスク -->
-    <div class="task-pane pane" @click="setFocus('tasks')">
+    <div class="task-pane">
       <h2 class="pane-title">本日のタスク</h2>
 
       <div class="task-scroll-area">
@@ -11,39 +11,29 @@
 
         <ul class="task-list">
           <li v-for="(task, index) in filteredTodayTasks" :key="task.id">
-            <input
-              type="checkbox"
-              v-model="task.done"
-              @click.stop
-            />
+            <input type="checkbox" v-model="task.done" />
             <span class="task-text" :class="{ done: task.done }">
               {{ task.text }}
             </span>
-            <button @click.stop="removeTask(index)" class="del-btn">×</button>
+            <button class="del-btn" @click="removeTask(index)">×</button>
           </li>
         </ul>
       </div>
-
-      <div class="inactive-label" v-if="currentFocus === 'char'">
-        <span>OPEN</span>
-      </div>
     </div>
 
-    <!-- 右：キャラ -->
-    <div class="char-pane pane" @click="setFocus('char')">
-      <Live2DView :emotion="getEmotion" class="live2d-model" />
+    <!-- 右下固定：キャラ -->
+    <div class="character-layer">
+      <Live2DView
+        :emotion="getEmotion"
+        class="live2d-model"
+      />
 
-      <div
-        v-if="currentFocus !== 'tasks'"
-        class="bubble"
-        :class="{ 'complete-effect': showCompleteEffect }"
-      >
+      <div class="bubble" :class="{ 'complete-effect': showCompleteEffect }">
         {{ displayMessage }}
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { computed, inject, ref, watch } from 'vue'
 import Live2DView from './Live2DView.vue'
@@ -53,13 +43,7 @@ const { tasks, removeTask } = inject('task-data')
 const { characterPersonality } = inject('character-data')
 
 /* state */
-const currentFocus = ref('neutral')
 const showCompleteEffect = ref(false)
-
-/* フォーカス切替 */
-const setFocus = (target) => {
-  currentFocus.value = currentFocus.value === target ? 'neutral' : target
-}
 
 /* 今日のタスク */
 const filteredTodayTasks = computed(() => {
@@ -67,7 +51,7 @@ const filteredTodayTasks = computed(() => {
   return tasks.value.filter(t => t.dueDate === today)
 })
 
-/* 性格キー */
+/* 性格キー変換 */
 const personalityKey = computed(() => {
   switch (characterPersonality.value) {
     case '元気系': return 'genki'
@@ -77,7 +61,7 @@ const personalityKey = computed(() => {
   }
 })
 
-/* セリフ定義 */
+/* セリフ */
 const normalMessageMap = {
   genki: {
     many: '今日も全力でいこー！🔥',
@@ -107,7 +91,7 @@ const leftCount = computed(() =>
   tasks.value.filter(t => !t.done).length
 )
 
-/* 表示セリフ（ここが最重要） */
+/* 表示メッセージ */
 const displayMessage = computed(() => {
   const key = personalityKey.value
 
@@ -121,7 +105,7 @@ const displayMessage = computed(() => {
   return msg.many
 })
 
-/* Live2D 感情 */
+/* Live2D感情 */
 const getEmotion = computed(() => {
   if (showCompleteEffect.value) return 'celebrate'
   if (tasks.value.length === 0) return 'idle'
@@ -130,7 +114,7 @@ const getEmotion = computed(() => {
   return 'idle'
 })
 
-/* 全タスク完了の瞬間検知 */
+/* 全完了演出 */
 watch(
   () => tasks.value.map(t => t.done),
   (newVal, oldVal) => {
@@ -138,51 +122,40 @@ watch(
     const isAllDone = newVal.length && newVal.every(v => v)
 
     if (!wasAllDone && isAllDone) {
-      triggerCompleteEffect()
+      showCompleteEffect.value = true
+      setTimeout(() => {
+        showCompleteEffect.value = false
+      }, 2500)
     }
   }
 )
-
-const triggerCompleteEffect = () => {
-  showCompleteEffect.value = true
-  setTimeout(() => {
-    showCompleteEffect.value = false
-  }, 2500)
-}
 </script>
-
-<style scoped>
-/* レイアウト */
-.split-container {
-  display: flex;
+<style>
+  /* 全体 */
+.app-root {
   width: 100%;
   height: 100dvh;
-  overflow: hidden;
   background: #fff;
-}
-
-.pane {
-  flex: 1;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  transition: flex 0.5s cubic-bezier(0.2, 0, 0, 1);
+  overflow: hidden;
 }
 
-/* タスク */
+/* ===== タスク ===== */
 .task-pane {
+  width: 50%;
+  height: 100%;
   padding-top: 60px;
 }
 
 .pane-title {
   position: absolute;
   top: 20px;
-  left: 10px;
+  left: 20px;
 }
 
 .task-scroll-area {
-  flex: 1;
-  padding: 20px 20px 100px;
+  height: 100%;
+  padding: 20px 20px 120px;
   overflow-y: auto;
 }
 
@@ -194,6 +167,7 @@ const triggerCompleteEffect = () => {
 
 .task-list li {
   display: flex;
+  align-items: center;
   gap: 12px;
   margin-bottom: 10px;
   padding: 14px;
@@ -207,36 +181,39 @@ const triggerCompleteEffect = () => {
   color: #bbb;
 }
 
-/* キャラ */
-.char-pane {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
+.del-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
 }
 
-/* フォーカス */
-.split-container.tasks .task-pane { flex: 8; }
-.split-container.tasks .char-pane { flex: 2; }
-
-.split-container.char .char-pane { flex: 8; }
-.split-container.char .task-pane { flex: 2; }
+/* ===== キャラ（画面固定） ===== */
+.character-layer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 50vw;
+  height: 100vh;
+  pointer-events: none;
+  background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
+}
 
 /* Live2D */
 .live2d-model {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%) scale(1.2);
+  transform: translateX(-50%) scale(1.6);
   width: 100%;
   height: 100%;
-  pointer-events: none;
 }
 
 /* 吹き出し */
 .bubble {
   position: absolute;
-  top: 70%;
+  bottom: 45%;
   right: 10%;
   width: 220px;
   padding: 16px 20px;
@@ -277,4 +254,5 @@ const triggerCompleteEffect = () => {
   0%,100% { box-shadow: 0 0 10px rgba(255,183,77,0.3); }
   50% { box-shadow: 0 0 25px rgba(255,152,0,0.6); }
 }
+
 </style>
