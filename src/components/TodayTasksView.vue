@@ -1,17 +1,23 @@
 <template>
   <div class="split-container" :class="currentFocus">
-    
+    <!-- 左：タスク -->
     <div class="task-pane pane" @click="setFocus('tasks')">
       <h2 class="pane-title">📝 本日のタスク</h2>
-      
+
       <div class="task-scroll-area">
         <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
           タスクなし
         </div>
+
         <ul class="task-list">
           <li v-for="(task, index) in filteredTodayTasks" :key="index">
-            <input type="checkbox" v-model="task.done" @click.stop class="custom-checkbox" />
-            <span class="task-text" :class="[task.done ? 'done' : '', task.priority]">
+            <input
+              type="checkbox"
+              v-model="task.done"
+              @click.stop
+              class="custom-checkbox"
+            />
+            <span class="task-text" :class="{ done: task.done }">
               {{ task.text }}
             </span>
             <button @click.stop="removeTask(index)" class="del-btn">×</button>
@@ -24,42 +30,77 @@
       </div>
     </div>
 
+    <!-- 右：キャラ -->
     <div class="char-pane pane" @click="setFocus('char')">
-      <Live2DView 
-        :emotion="getEmotion"
-        class="live2d-model"
-      />
-      
-      <div class="bubble" v-if="currentFocus !== 'tasks'">
-        {{ characterMessage }}
+      <Live2DView :emotion="getEmotion" class="live2d-model" />
+
+      <div
+        v-if="currentFocus !== 'tasks'"
+        class="bubble"
+        :class="{ 'complete-effect': showCompleteEffect }"
+      >
+        {{ showCompleteEffect ? completeMessage : characterMessage }}
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-/* スクリプト部分は変更なし */
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import Live2DView from './Live2DView.vue'
 
+/* inject */
 const { tasks, removeTask } = inject('task-data')
-const currentFocus = ref('neutral')
+const { characterPersonality } = inject('character-data')
 
+/* state */
+const currentFocus = ref('neutral')
+const showCompleteEffect = ref(false)
+
+/* focus */
 const setFocus = (target) => {
-  if (currentFocus.value === target) {
-    currentFocus.value = 'neutral'
-  } else {
-    currentFocus.value = target
-  }
+  currentFocus.value = currentFocus.value === target ? 'neutral' : target
 }
 
+/* 今日のタスク */
 const filteredTodayTasks = computed(() => {
-  const today = new Date().toISOString().substr(0, 10)
-  return tasks.value.filter(task => task.dueDate === today)
+  const today = new Date().toISOString().slice(0, 10)
+  return tasks.value.filter(t => t.dueDate === today)
 })
 
+/* 性格キー変換 */
+const personalityKey = computed(() => {
+  switch (characterPersonality.value) {
+    case '元気系': return 'genki'
+    case '癒し系': return 'heal'
+    case 'クール系': return 'cool'
+    default: return 'genki'
+  }
+})
+
+/* 通常セリフ */
+const characterMessage = computed(() => {
+  const left = tasks.value.filter(t => !t.done).length
+  if (left === 0) return '完了！お疲れ様🎉'
+  if (left < 3) return 'あと少しだよ！'
+  return '今日も頑張ろう✨'
+})
+
+/* 完了時専用セリフ */
+const completeMessageMap = {
+  genki: 'ぜんぶ終わったー！！最高！！🎉✨',
+  cool: '全タスク完了。よくやった。',
+  heal: '全部できたね…今日はゆっくりしよ☕'
+}
+
+const completeMessage = computed(() => {
+  return completeMessageMap[personalityKey.value]
+})
+
+/* Live2D感情 */
 const getEmotion = computed(() => {
+  if (showCompleteEffect.value) return 'celebrate'
+
   const completed = tasks.value.filter(t => t.done).length
   if (tasks.value.length === 0) return 'idle'
   if (completed === tasks.value.length) return 'celebrate'
@@ -67,122 +108,162 @@ const getEmotion = computed(() => {
   return 'idle'
 })
 
-const characterMessage = computed(() => {
-  const left = tasks.value.filter(t => !t.done).length
-  if (left === 0) return '完了！お疲れ様🎉'
-  if (left < 3) return 'あと少しだよ！'
-  return '今日も頑張ろう✨'
-})
+/* 全タスク完了の瞬間を検知 */
+watch(
+  () => tasks.value.map(t => t.done),
+  (newVal, oldVal) => {
+    const wasAllDone = oldVal?.length && oldVal.every(v => v)
+    const isAllDone = newVal.length && newVal.every(v => v)
+
+    if (!wasAllDone && isAllDone) {
+      triggerCompleteEffect()
+    }
+  }
+)
+
+const triggerCompleteEffect = () => {
+  showCompleteEffect.value = true
+  setTimeout(() => {
+    showCompleteEffect.value = false
+  }, 2500)
+}
 </script>
 
 <style scoped>
-/* 全体コンテナ */
+/* 全体 */
 .split-container {
   display: flex;
   width: 100%;
-  height: 100dvh; /* スマホのアドレスバー対策 */
-  position: relative;
-  overflow: hidden; /* はみ出しはここでカット */
-  background-color: #ffffff;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #fff;
 }
 
-/* 共通パネル設定 */
+/* 共通 */
 .pane {
-  flex: 1; /* 基本は1:1 */
+  flex: 1;
   position: relative;
-  /* overflow: hidden; を削除。キャラの手などが切れるのを防ぐ */
-  transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;
+  transition: flex 0.5s cubic-bezier(0.2, 0, 0, 1),
+              background 0.3s;
 }
 
-/* === 左：タスクパネル === */
+/* タスク */
 .task-pane {
-  background: #ffffff;
-  padding-top: 60px; /* タイトル位置調整 */
+  padding-top: 60px;
+  background: #fff;
 }
 
-/* === 右：キャラパネル === */
+.pane-title {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 1.2rem;
+}
+
+.task-scroll-area {
+  flex: 1;
+  padding: 20px 20px 100px;
+  overflow-y: auto;
+}
+
+.task-scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  border-left: 5px solid #FFB74D;
+}
+
+.task-text {
+  flex: 1;
+}
+
+.done {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+.del-btn {
+  border: none;
+  background: none;
+  font-size: 1.2rem;
+  color: #999;
+}
+
+/* キャラ */
 .char-pane {
-  background: #ffffff;
-  /* 中身（Live2Dと吹き出し）の位置基準にする */
   display: flex;
   justify-content: center;
-  align-items: flex-end; /* 下揃え */
-}
-
-/* 動作ごとのスタイル変化 */
-
-/* [Neutral] 半々 */
-.split-container.neutral .char-pane {
-  /* ここに背景画像を指定すると半々の時だけ表示されます */
+  align-items: flex-end;
   background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
 }
 
-/* [Tasks] タスク主役 */
+/* フォーカス状態 */
 .split-container.tasks .task-pane { flex: 8; }
-.split-container.tasks .char-pane {
-  flex: 2;
-  background: #FFCC80; /* 縮んだ時の色 */
-  cursor: pointer;
+.split-container.tasks .char-pane { flex: 2; background: #FFCC80; }
+
+.split-container.char .char-pane { flex: 8; }
+.split-container.char .task-pane { flex: 2; background: #f5f5f5; }
+
+.split-container.char .task-scroll-area,
+.split-container.char .pane-title {
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* [Char] キャラ主役 */
-.split-container.char .char-pane {
-  flex: 8;
-  background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
-}
-.split-container.char .task-pane {
-  flex: 2;
-  background: #f5f5f5;
-  cursor: pointer;
-}
-
-/* === Live2D === */
+/* Live2D */
 .live2d-model {
   position: absolute;
   bottom: 0;
-  /* 親(.char-pane)の真ん中に配置 */
   left: 50%;
   transform: translateX(-50%) scale(1.15);
-  
-  width: 100%; /* 親の幅に合わせる */
+  width: 100%;
   height: 100%;
-  
-  transition: transform 0.5s, opacity 0.3s;
   pointer-events: none;
   z-index: 10;
+  transition: transform 0.5s, opacity 0.3s;
 }
 
-/* 状態ごとのキャラ調整 */
 .split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.4) translateY(20%); /* 大きく */
+  transform: translateX(-50%) scale(1.4) translateY(20%);
 }
+
 .split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.6); /* 小さく */
+  transform: translateX(-50%) scale(0.6);
   opacity: 0.6;
 }
 
-/* === 吹き出し === */
+/* 吹き出し */
 .bubble {
-  position: absolute; /* 親(char-pane)に対して絶対配置 */
+  position: absolute;
   top: 70%;
-  right: 10%; /* 右端からの距離 */
+  right: 10%;
   width: 200px;
-  background: #ffffff;
   padding: 15px 20px;
   border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  
-  font-size: 0.9rem;
+  background: #fff;
   font-weight: bold;
-  color: #333;
-  z-index: 20;
-  
-  /* ふわふわアニメーション */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   animation: float 3s ease-in-out infinite;
+  z-index: 20;
 }
-/* 吹き出しのしっぽ */
+
 .bubble::after {
   content: '';
   position: absolute;
@@ -193,52 +274,13 @@ const characterMessage = computed(() => {
   border-color: transparent transparent #fff transparent;
 }
 
-/* === タスクリストまわり === */
-.pane-title {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  margin: 0;
-  font-size: 1.2rem;
-  color: #333;
+/* 完了エフェクト */
+.complete-effect {
+  animation: pop 0.4s ease-out,
+             glow 1.5s ease-in-out infinite;
 }
 
-.task-scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  padding-bottom: 100px; /* 下部余白 */
-}
-/* スクロールバー消し */
-.task-scroll-area::-webkit-scrollbar { display: none; }
-
-.task-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.task-list li {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: #f8f9fa;
-  margin-bottom: 10px;
-  padding: 15px;
-  border-radius: 12px;
-  border-left: 5px solid #FFB74D;
-}
-.task-text { flex: 1; color: #333; }
-.done { text-decoration: line-through; color: #bbb; }
-.del-btn { border: none; background: transparent; font-size: 1.2rem; color: #999; }
-
-/* 縮んだ時にタスクの中身を消す */
-.split-container.char .task-scroll-area,
-.split-container.char .pane-title {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* OPENラベル */
+/* OPEN */
 .inactive-label {
   position: absolute;
   top: 50%;
@@ -247,11 +289,21 @@ const characterMessage = computed(() => {
   font-weight: 900;
   color: #ccc;
   letter-spacing: 4px;
-  white-space: nowrap;
 }
 
+/* animations */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
+}
+
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 10px rgba(255,183,77,0.3); }
+  50% { box-shadow: 0 0 25px rgba(255,152,0,0.6); }
 }
 </style>
