@@ -213,6 +213,7 @@ const triggerCompleteEffect = () => {
   justify-content: center;
   align-items: flex-end;
   background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
+  overflow: visible; 
 }
 
 /* フォーカス */
