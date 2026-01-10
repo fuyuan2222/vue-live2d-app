@@ -31,7 +31,7 @@
       />
       
       <div class="bubble" v-if="currentFocus !== 'tasks'">
-        {{ characterMessage }}
+        {{ displayMessage }}
       </div>
     </div>
 
