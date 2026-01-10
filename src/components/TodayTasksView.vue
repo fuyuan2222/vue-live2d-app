@@ -192,8 +192,6 @@ watch(
 }
 .split-container.char .task-pane {
   flex: 2;
-  background: #f5f5f5;
-  cursor: pointer;
 }
 
 /* === Live2D === */
