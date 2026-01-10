@@ -1,40 +1,42 @@
 <template>
-  <div class="app-root">
-    <!-- 左：タスク -->
-    <div class="task-pane">
-      <h2 class="pane-title">本日のタスク</h2>
-
+  <div class="split-container" :class="currentFocus">
+    
+    <div class="task-pane pane" @click="setFocus('tasks')">
+      <h2 class="pane-title">📝 本日のタスク</h2>
+      
       <div class="task-scroll-area">
         <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
           タスクなし
         </div>
-
         <ul class="task-list">
-          <li v-for="(task, index) in filteredTodayTasks" :key="task.id">
-            <input type="checkbox" v-model="task.done" />
-            <span class="task-text" :class="{ done: task.done }">
+          <li v-for="(task, index) in filteredTodayTasks" :key="index">
+            <input type="checkbox" v-model="task.done" @click.stop class="custom-checkbox" />
+            <span class="task-text" :class="[task.done ? 'done' : '', task.priority]">
               {{ task.text }}
             </span>
-            <button class="del-btn" @click="removeTask(index)">×</button>
+            <button @click.stop="removeTask(index)" class="del-btn">×</button>
           </li>
         </ul>
       </div>
+
+      <div class="inactive-label" v-if="currentFocus === 'char'">
+        <span>OPEN</span>
+      </div>
     </div>
 
-    <!-- 右下固定：キャラ -->
-    <div class="character-layer">
-      <Live2DView
+    <div class="char-pane pane" @click="setFocus('char')">
+      <Live2DView 
         :emotion="getEmotion"
         class="live2d-model"
       />
-
-      <div class="bubble" :class="{ 'complete-effect': showCompleteEffect }">
-        {{ displayMessage }}
+      
+      <div class="bubble" v-if="currentFocus !== 'tasks'">
+        {{ characterMessage }}
       </div>
     </div>
+
   </div>
 </template>
-
 
 <script setup>
 import { computed, inject, ref, watch } from 'vue'
@@ -192,6 +194,8 @@ watch(
 }
 .split-container.char .task-pane {
   flex: 2;
+  background: #f5f5f5;
+  cursor: pointer;
 }
 
 /* === Live2D === */
