@@ -2,7 +2,7 @@
   <div class="split-container" :class="currentFocus">
     <!-- 左：タスク -->
     <div class="task-pane pane" @click="setFocus('tasks')">
-      <h2 class="pane-title">📝 本日のタスク</h2>
+      <h2 class="pane-title">本日のタスク</h2>
 
       <div class="task-scroll-area">
         <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
@@ -177,7 +177,7 @@ const triggerCompleteEffect = () => {
 .pane-title {
   position: absolute;
   top: 20px;
-  left: 20px;
+  left: 10px;
 }
 
 .task-scroll-area {
