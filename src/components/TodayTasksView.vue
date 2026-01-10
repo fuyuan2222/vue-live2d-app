@@ -10,12 +10,11 @@
         </div>
 
         <ul class="task-list">
-          <li v-for="(task, index) in filteredTodayTasks" :key="index">
+          <li v-for="(task, index) in filteredTodayTasks" :key="task.id">
             <input
               type="checkbox"
               v-model="task.done"
               @click.stop
-              class="custom-checkbox"
             />
             <span class="task-text" :class="{ done: task.done }">
               {{ task.text }}
@@ -39,7 +38,7 @@
         class="bubble"
         :class="{ 'complete-effect': showCompleteEffect }"
       >
-        {{ showCompleteEffect ? completeMessage : characterMessage }}
+        {{ displayMessage }}
       </div>
     </div>
   </div>
@@ -57,7 +56,7 @@ const { characterPersonality } = inject('character-data')
 const currentFocus = ref('neutral')
 const showCompleteEffect = ref(false)
 
-/* focus */
+/* フォーカス切替 */
 const setFocus = (target) => {
   currentFocus.value = currentFocus.value === target ? 'neutral' : target
 }
@@ -68,7 +67,7 @@ const filteredTodayTasks = computed(() => {
   return tasks.value.filter(t => t.dueDate === today)
 })
 
-/* 性格キー変換 */
+/* 性格キー */
 const personalityKey = computed(() => {
   switch (characterPersonality.value) {
     case '元気系': return 'genki'
@@ -78,37 +77,60 @@ const personalityKey = computed(() => {
   }
 })
 
-/* 通常セリフ */
-const characterMessage = computed(() => {
-  const left = tasks.value.filter(t => !t.done).length
-  if (left === 0) return '完了！お疲れ様🎉'
-  if (left < 3) return 'あと少しだよ！'
-  return '今日も頑張ろう✨'
-})
+/* セリフ定義 */
+const normalMessageMap = {
+  genki: {
+    many: '今日も全力でいこー！🔥',
+    few: 'あとちょっと！ファイト！💪',
+    done: '完了！お疲れ様！！🎉'
+  },
+  cool: {
+    many: '計画通り進めよう。',
+    few: '終わりが見えてきたな。',
+    done: '完了だ。'
+  },
+  heal: {
+    many: '無理しすぎないでね🌱',
+    few: 'あと少し…一緒に頑張ろ☕',
+    done: '全部できたね、お疲れさま…✨'
+  }
+}
 
-/* 完了時専用セリフ */
 const completeMessageMap = {
   genki: 'ぜんぶ終わったー！！最高！！🎉✨',
   cool: '全タスク完了。よくやった。',
   heal: '全部できたね…今日はゆっくりしよ☕'
 }
 
-const completeMessage = computed(() => {
-  return completeMessageMap[personalityKey.value]
+/* 残タスク数 */
+const leftCount = computed(() =>
+  tasks.value.filter(t => !t.done).length
+)
+
+/* 表示セリフ（ここが最重要） */
+const displayMessage = computed(() => {
+  const key = personalityKey.value
+
+  if (showCompleteEffect.value) {
+    return completeMessageMap[key]
+  }
+
+  const msg = normalMessageMap[key]
+  if (leftCount.value === 0) return msg.done
+  if (leftCount.value < 3) return msg.few
+  return msg.many
 })
 
-/* Live2D感情 */
+/* Live2D 感情 */
 const getEmotion = computed(() => {
   if (showCompleteEffect.value) return 'celebrate'
-
-  const completed = tasks.value.filter(t => t.done).length
   if (tasks.value.length === 0) return 'idle'
-  if (completed === tasks.value.length) return 'celebrate'
-  if (completed > 0) return 'smile'
+  if (leftCount.value === 0) return 'celebrate'
+  if (leftCount.value < tasks.value.length) return 'smile'
   return 'idle'
 })
 
-/* 全タスク完了の瞬間を検知 */
+/* 全タスク完了の瞬間検知 */
 watch(
   () => tasks.value.map(t => t.done),
   (newVal, oldVal) => {
@@ -130,47 +152,38 @@ const triggerCompleteEffect = () => {
 </script>
 
 <style scoped>
-/* 全体 */
+/* レイアウト */
 .split-container {
   display: flex;
   width: 100%;
-  height: 100vh;
   height: 100dvh;
   overflow: hidden;
   background: #fff;
 }
 
-/* 共通 */
 .pane {
   flex: 1;
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: flex 0.5s cubic-bezier(0.2, 0, 0, 1),
-              background 0.3s;
+  transition: flex 0.5s cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* タスク */
 .task-pane {
   padding-top: 60px;
-  background: #fff;
 }
 
 .pane-title {
   position: absolute;
   top: 20px;
   left: 20px;
-  font-size: 1.2rem;
 }
 
 .task-scroll-area {
   flex: 1;
   padding: 20px 20px 100px;
   overflow-y: auto;
-}
-
-.task-scroll-area::-webkit-scrollbar {
-  display: none;
 }
 
 .task-list {
@@ -181,29 +194,17 @@ const triggerCompleteEffect = () => {
 
 .task-list li {
   display: flex;
-  align-items: center;
   gap: 12px;
   margin-bottom: 10px;
   padding: 14px;
-  border-radius: 12px;
   background: #f8f9fa;
+  border-radius: 12px;
   border-left: 5px solid #FFB74D;
-}
-
-.task-text {
-  flex: 1;
 }
 
 .done {
   text-decoration: line-through;
   color: #bbb;
-}
-
-.del-btn {
-  border: none;
-  background: none;
-  font-size: 1.2rem;
-  color: #999;
 }
 
 /* キャラ */
@@ -214,39 +215,22 @@ const triggerCompleteEffect = () => {
   background: linear-gradient(180deg, #FFE0B2 0%, #FFFFFF 100%);
 }
 
-/* フォーカス状態 */
+/* フォーカス */
 .split-container.tasks .task-pane { flex: 8; }
-.split-container.tasks .char-pane { flex: 2; background: #FFCC80; }
+.split-container.tasks .char-pane { flex: 2; }
 
 .split-container.char .char-pane { flex: 8; }
-.split-container.char .task-pane { flex: 2; background: #f5f5f5; }
-
-.split-container.char .task-scroll-area,
-.split-container.char .pane-title {
-  opacity: 0;
-  pointer-events: none;
-}
+.split-container.char .task-pane { flex: 2; }
 
 /* Live2D */
 .live2d-model {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%) scale(1.15);
+  transform: translateX(-50%) scale(1.2);
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 10;
-  transition: transform 0.5s, opacity 0.3s;
-}
-
-.split-container.char .live2d-model {
-  transform: translateX(-50%) scale(1.4) translateY(20%);
-}
-
-.split-container.tasks .live2d-model {
-  transform: translateX(-50%) scale(0.6);
-  opacity: 0.6;
 }
 
 /* 吹き出し */
@@ -254,14 +238,13 @@ const triggerCompleteEffect = () => {
   position: absolute;
   top: 70%;
   right: 10%;
-  width: 200px;
-  padding: 15px 20px;
-  border-radius: 20px;
+  width: 220px;
+  padding: 16px 20px;
   background: #fff;
+  border-radius: 20px;
   font-weight: bold;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   animation: float 3s ease-in-out infinite;
-  z-index: 20;
 }
 
 .bubble::after {
@@ -274,26 +257,14 @@ const triggerCompleteEffect = () => {
   border-color: transparent transparent #fff transparent;
 }
 
-/* 完了エフェクト */
+/* 完了演出 */
 .complete-effect {
   animation: pop 0.4s ease-out,
              glow 1.5s ease-in-out infinite;
 }
 
-/* OPEN */
-.inactive-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(90deg);
-  font-weight: 900;
-  color: #ccc;
-  letter-spacing: 4px;
-}
-
-/* animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
+  0%,100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
 
