@@ -265,7 +265,7 @@ const triggerCompleteEffect = () => {
 }
 
 @keyframes float {
-  0%,100% { transform: translateY(0); }
+  0%,100% { transform: translateY(20%); }
   50% { transform: translateY(-5px); }
 }
 
