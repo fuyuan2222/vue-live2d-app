@@ -1,78 +1,136 @@
 <template>
-  <div class="split-container" :class="currentFocus">
-    
-    <div class="task-pane pane" @click="setFocus('tasks')">
-      <h2 class="pane-title">📝 本日のタスク</h2>
-      
+  <div class="app-root">
+    <!-- 左：タスク -->
+    <div class="task-pane">
+      <h2 class="pane-title">本日のタスク</h2>
+
       <div class="task-scroll-area">
         <div v-if="filteredTodayTasks.length === 0" class="no-tasks">
           タスクなし
         </div>
+
         <ul class="task-list">
-          <li v-for="(task, index) in filteredTodayTasks" :key="index">
-            <input type="checkbox" v-model="task.done" @click.stop class="custom-checkbox" />
-            <span class="task-text" :class="[task.done ? 'done' : '', task.priority]">
+          <li v-for="(task, index) in filteredTodayTasks" :key="task.id">
+            <input type="checkbox" v-model="task.done" />
+            <span class="task-text" :class="{ done: task.done }">
               {{ task.text }}
             </span>
-            <button @click.stop="removeTask(index)" class="del-btn">×</button>
+            <button class="del-btn" @click="removeTask(index)">×</button>
           </li>
         </ul>
       </div>
-
-      <div class="inactive-label" v-if="currentFocus === 'char'">
-        <span>OPEN</span>
-      </div>
     </div>
 
-    <div class="char-pane pane" @click="setFocus('char')">
-      <Live2DView 
+    <!-- 右下固定：キャラ -->
+    <div class="character-layer">
+      <Live2DView
         :emotion="getEmotion"
         class="live2d-model"
       />
-      
-      <div class="bubble" v-if="currentFocus !== 'tasks'">
-        {{ characterMessage }}
+
+      <div class="bubble" :class="{ 'complete-effect': showCompleteEffect }">
+        {{ displayMessage }}
       </div>
     </div>
-
   </div>
 </template>
 
+
 <script setup>
-/* スクリプト部分は変更なし */
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import Live2DView from './Live2DView.vue'
 
+/* inject */
 const { tasks, removeTask } = inject('task-data')
-const currentFocus = ref('neutral')
+const { characterPersonality } = inject('character-data')
 
-const setFocus = (target) => {
-  if (currentFocus.value === target) {
-    currentFocus.value = 'neutral'
-  } else {
-    currentFocus.value = target
+/* state */
+const showCompleteEffect = ref(false)
+
+/* 今日のタスク */
+const filteredTodayTasks = computed(() => {
+  const today = new Date().toISOString().slice(0, 10)
+  return tasks.value.filter(t => t.dueDate === today)
+})
+
+/* 性格キー変換 */
+const personalityKey = computed(() => {
+  switch (characterPersonality.value) {
+    case '元気系': return 'genki'
+    case '癒し系': return 'heal'
+    case 'クール系': return 'cool'
+    default: return 'genki'
+  }
+})
+
+/* セリフ */
+const normalMessageMap = {
+  genki: {
+    many: '今日も全力でいこー！🔥',
+    few: 'あとちょっと！ファイト！💪',
+    done: '完了！お疲れ様！！🎉'
+  },
+  cool: {
+    many: '計画通り進めよう。',
+    few: '終わりが見えてきたな。',
+    done: '完了だ。'
+  },
+  heal: {
+    many: '無理しすぎないでね🌱',
+    few: 'あと少し…一緒に頑張ろ☕',
+    done: '全部できたね、お疲れさま…✨'
   }
 }
 
-const filteredTodayTasks = computed(() => {
-  const today = new Date().toISOString().substr(0, 10)
-  return tasks.value.filter(task => task.dueDate === today)
+const completeMessageMap = {
+  genki: 'ぜんぶ終わったー！！最高！！🎉✨',
+  cool: '全タスク完了。よくやった。',
+  heal: '全部できたね…今日はゆっくりしよ☕'
+}
+
+/* 残タスク数 */
+const leftCount = computed(() =>
+  tasks.value.filter(t => !t.done).length
+)
+
+/* 表示メッセージ */
+const displayMessage = computed(() => {
+  const key = personalityKey.value
+
+  if (showCompleteEffect.value) {
+    return completeMessageMap[key]
+  }
+
+  const msg = normalMessageMap[key]
+  if (leftCount.value === 0) return msg.done
+  if (leftCount.value < 3) return msg.few
+  return msg.many
 })
 
+/* Live2D感情 */
 const getEmotion = computed(() => {
-  const completed = tasks.value.filter(t => t.done).length
+  if (showCompleteEffect.value) return 'celebrate'
   if (tasks.value.length === 0) return 'idle'
-  if (completed === tasks.value.length) return 'celebrate'
-  if (completed > 0) return 'smile'
+  if (leftCount.value === 0) return 'celebrate'
+  if (leftCount.value < tasks.value.length) return 'smile'
   return 'idle'
 })
 
-const characterMessage = computed(() => {
-  const left = tasks.value.filter(t => !t.done).length
-  if (left === 0) return '完了！お疲れ様🎉'
-  if (left < 3) return 'あと少しだよ！'
-  return '今日も頑張ろう✨'
-})
+/* 全完了演出 */
+watch(
+  () => tasks.value.map(t => t.done),
+  (newVal, oldVal) => {
+    const wasAllDone = oldVal?.length && oldVal.every(v => v)
+    const isAllDone = newVal.length && newVal.every(v => v)
+
+    if (!wasAllDone && isAllDone) {
+      showCompleteEffect.value = true
+      setTimeout(() => {
+        showCompleteEffect.value = false
+      }, 2500)
+    }
+  }
+)
 </script>
 
 <style scoped>
