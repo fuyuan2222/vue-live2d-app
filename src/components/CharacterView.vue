@@ -3,13 +3,14 @@
     <h2>キャラクター設定</h2>
     
     <div class="live2d-preview-container">
-      <Live2DModel
-        :emotion="getEmotion"
-        :personality="characterPersonality"
-        :front-hairstyle="characterFrontHairstyle"
-        :back-hairstyle="characterBackHairstyle"
-        :eyes="characterEyes" 
-      />
+      <Live2DView
+  :emotion="getEmotion"
+  :personality="characterPersonality"
+  :front-hairstyle="characterFrontHairstyle"
+  :back-hairstyle="characterBackHairstyle"
+  :eyes="characterEyes"
+/>
+
     </div>
 
     <div class="customization-options">
@@ -54,7 +55,7 @@
 
 <script setup>
 import { inject, computed } from 'vue'
-import Live2DModel from './Live2DView.vue'
+import Live2DView from './Live2DView.vue'
 
 // App.vue から提供されたデータを受け取る
 const {
