@@ -40,22 +40,21 @@ const MAPPINGS = {
   params: {
     // 前髪
     frontHairstyle: {
-      'ぱっつん': 'ParamHairFront01',
-      '３つ分け': 'ParamHairFront02',
-      '２・８分け': 'ParamHairFront03'
+      'ぱっつん': 'ParamHairFront_pattun',
+      '３つ分け': 'ParamHairFront_Three',
+      '２・８分け': 'ParamHairFront_TowEight'
     },
     // 後ろ髪
     backHairstyle: {
-      'ロング': 'ParamHairBack01',
-      'ボブ': 'ParamHairBack02',
-      'ショート': 'ParamHairBack03',
-      'ツイン': 'ParamHairBack04'
+      '一つ結び': 'ParamHairBack_One',
+      'ショート': 'ParamHairBack_Short',
+      'サイドテール': 'ParamHairBack_Side'
     },
     // 目
     eyes: {
-      '丸目': 'ParamEyeType01',
-      'たれ目': 'ParamEyeType02',
-      '釣り目': 'ParamEyeType03'
+      '丸目': 'ParamEyeType_Round',
+      'たれ目': 'ParamEyeType_Droop',
+      '釣り目': 'ParamEyeType_Sharp'
     }
   }
 };
