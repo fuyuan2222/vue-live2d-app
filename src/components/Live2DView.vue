@@ -29,7 +29,7 @@ let model = null
 
 /* =====================
   マッピング定義
-  ★ご指定の正しいIDに更新済み
+  ※ study.model3.json のキー名と一致させる
 ===================== */
 const MAPPINGS = {
   motions: {
@@ -75,10 +75,9 @@ const MAPPINGS = {
 /* =====================
   初期化
 ===================== */
-/* =====================
-  初期化
-===================== */
 onMounted(async () => {
+  window.live2d = model//デバッグ用
+  
   if (!canvasRef.value) return
 
   app = new PIXI.Application({
@@ -90,7 +89,7 @@ onMounted(async () => {
     antialias: true
   })
 
-  /* interaction 周りのクラッシュ回避 */
+  /* interaction クラッシュ回避 */
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -118,31 +117,97 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // ★★★ ここを修正（決定版） ★★★
-  // model.on は削除し、app.ticker.add に戻します。
-  // ただし、第3引数に「PIXI.UPDATE_PRIORITY.UTILITY」を指定します。
-  // これは「一番最後に実行する」という意味で、モーション計算後に確実に上書きできます。
-  app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
+  // 毎フレーム見た目を更新（モーション上書き対策）
+  app.ticker.add(() => {
+    updateAppearance()
+  })
 
   playMotionByState()
 
   window.addEventListener('resize', onResize)
 })
 
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  if (app) app.destroy(true, { children: true })
+})
+
 /* =====================
   見た目切り替え
-  （デバッグコード削除済み・毎フレーム実行）
 ===================== */
+// const updateAppearance = () => {
+//   if (!model) return
+//   const core = model.internalModel.coreModel
+
+//   /* 服装 */
+//   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
+//     core.setParameterValueById(
+//       paramId,
+//       key === props.personality ? 1 : 0
+//     )
+//   })
+
+//   /* パーツ */
+//   const setParamGroup = (group, selected) => {
+//     const map = MAPPINGS.params[group]
+//     Object.entries(map).forEach(([name, id]) => {
+//       core.setParameterValueById(id, name === selected ? 1 : 0)
+//     })
+//   }
+
+//   setParamGroup('frontHairstyle', props.frontHairstyle)
+//   setParamGroup('backHairstyle', props.backHairstyle)
+//   setParamGroup('eyes', props.eyes)
+// }
+// デバッグ用のフラグ（スクリプトの一番上に書いてもOK）
+let isDebugLogged = false
+
 const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
+  // ★デバッグ：最初の1回だけ、すべての情報を吐き出す
+  if (!isDebugLogged) {
+    console.group("🔍 Live2D Custom Debug")
+    
+    // 1. 親からデータが来ているか確認
+    console.log("① Props Data:", {
+      front: props.frontHairstyle,
+      back: props.backHairstyle,
+      eyes: props.eyes,
+      personality: props.personality
+    })
+
+    // 2. モデルが持っている全パラメータIDを表示（ここが一番大事！）
+    // ※SDKのバージョンによってプロパティ名が違うことがあるので念のため複数チェック
+    const allIds = core._parameterIds || core.getParameterIds()
+    console.log("② Model Actual IDs:", allIds)
+
+    // 3. マッピングしようとしているIDが、本当にモデルにあるかチェック
+    console.log("③ ID Matching Check:")
+    
+    const checkId = (groupName, currentVal) => {
+      const map = MAPPINGS.params[groupName]
+      Object.entries(map).forEach(([name, id]) => {
+        const exists = allIds.includes(id)
+        const status = exists ? "✅ OK" : "❌ MISSING"
+        const isSelected = (name === currentVal) ? "★SELECTED" : ""
+        console.log(`[${groupName}] ${name} -> ID: ${id} ... ${status} ${isSelected}`)
+      })
+    }
+
+    checkId('frontHairstyle', props.frontHairstyle)
+    checkId('backHairstyle', props.backHairstyle)
+    checkId('eyes', props.eyes)
+
+    console.groupEnd()
+    isDebugLogged = true // フラグを立ててログ停止
+  }
+
+  // --- 本来の処理 ---
   /* 服装 */
   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-    core.setParameterValueById(
-      paramId,
-      key === props.personality ? 1 : 0
-    )
+    core.setParameterValueById(paramId, key === props.personality ? 1 : 0)
   })
 
   /* 前髪・後ろ髪・目 */
@@ -177,13 +242,17 @@ const playMotionByState = async () => {
   }
 
   // 再生開始
+  // awaitをつけることで、再生が終わるまで待機できる
   const finished = await model.motion(groupName, 0, { priority })
 
-  // ループ処理：再生が正常終了し、かつアイドル状態であるべきなら再帰呼び出し
+  // ★ループ処理のキモ★
+  // 1. 再生が正常に終わった (finished === true)
+  // 2. まだアイドル状態であるべき (isIdle === true)
+  // 3. ユーザーが設定を変えていない (今のpropsと同じモーションである)
   if (finished && isIdle) {
     const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
     
-    // 設定が変わっていなければループ再生
+    // まだ同じモーションを再生すべき状態なら、自分自身を再帰呼び出ししてループさせる
     if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
       playMotionByState()
     }
@@ -197,6 +266,7 @@ watch(
   () => [props.personality, props.emotion],
   () => {
     // 設定が変わったら即座に新しいモーションを再生
+    // これにより、ループ待機中の古いモーションはキャンセルされ、新しいのが始まる
     playMotionByState()
   },
   { immediate: true }
