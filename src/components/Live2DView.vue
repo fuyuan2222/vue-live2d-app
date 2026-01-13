@@ -1,122 +1,199 @@
 <template>
-  <div class="live2d-canvas-container">
-    <canvas ref="canvasRef"></canvas>
-  </div>
+  <canvas ref="canvasRef" class="live2d-canvas"></canvas>
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import * as PIXI from 'pixi.js';
-// Cubism 4専用モードで読み込む（重要）
-import { Live2DModel } from 'pixi-live2d-display/cubism4';
+import { Live2DModel } from 'pixi-live2d-display';
 
-const props = defineProps({
-  emotion: String,
-  personality: String,
-  hairstyle: String,
-  outfit: String,
-  accessory: String
-});
-
-// ライブラリ動作のためにwindowに紐付け
+// PIXIをwindowに登録（必須）
 window.PIXI = PIXI;
+
+// ■ 親から受け取るデータ
+const props = defineProps({
+  // 感情/状態: 'idle', 'smile', 'celebrate' など
+  emotion: { type: String, default: 'idle' },
+  // 性格: '元気系', '癒し系', 'クール系'
+  personality: { type: String, default: '元気系' },
+  // カスタマイズ項目
+  frontHairstyle: { type: String, default: 'ぱっつん' },
+  backHairstyle: { type: String, default: 'ロング' },
+  eyes: { type: String, default: '丸目' }
+});
 
 const canvasRef = ref(null);
 let app = null;
 let model = null;
 
-onMounted(async () => {
-  if (!canvasRef.value) return;
+// ■ 設定：IDマッピング表
+// ★重要★ ここをご自身のLive2DパラメータIDに合わせて書き換えてください！
+const MAPPINGS = {
+  // 性格の変換表 (日本語 -> 英語サフィックス)
+  personality: {
+    '元気系': 'Genki',
+    '癒し系': 'Iyashi',
+    'クール系': 'Cool'
+  },
+  // 髪型・目の変換表 (選択肢 -> パラメータID)
+  // 値を 1 にするパラメータIDを指定します
+  params: {
+    // 前髪
+    frontHairstyle: {
+      'ぱっつん': 'ParamHairFront01',
+      '３つ分け': 'ParamHairFront02',
+      '２・８分け': 'ParamHairFront03'
+    },
+    // 後ろ髪
+    backHairstyle: {
+      'ロング': 'ParamHairBack01',
+      'ボブ': 'ParamHairBack02',
+      'ショート': 'ParamHairBack03',
+      'ツイン': 'ParamHairBack04'
+    },
+    // 目
+    eyes: {
+      '丸目': 'ParamEyeType01',
+      'たれ目': 'ParamEyeType02',
+      '釣り目': 'ParamEyeType03'
+    }
+  }
+};
 
-  // 1. PIXIアプリケーション作成
+onMounted(async () => {
+  // 1. Pixi Application作成
   app = new PIXI.Application({
     view: canvasRef.value,
-    width: 500,
-    height: 1600,
+    autoStart: true,
+    resizeTo: canvasRef.value.parentElement, // 親要素に合わせる
     backgroundAlpha: 0,
-    autoStart: true
   });
-
-  // 【最終解決策】イベントシステムを完全に破壊・削除する
-  // これにより、クリックやスクロール時に PIXI v7 が余計な計算（ヒットテスト）を行わなくなり、
-  // バージョン不整合によるクラッシュを物理的に防ぎます。
-  if (app.renderer.events) {
-    app.renderer.events.destroy(); // 機能を停止
-    delete app.renderer.events;    // 存在を抹消
-  }
-
-  // ※念のため古い形式（interaction）も削除
-  if (app.renderer.plugins && app.renderer.plugins.interaction) {
-    app.renderer.plugins.interaction.destroy();
-    delete app.renderer.plugins.interaction;
-  }
 
   // 2. モデル読み込み
-  // autoInteract: false は引き続き必須です
-  model = await Live2DModel.from('/live2d/Hiyori/Hiyori.model3.json', {
-    autoInteract: false
-  });
+  // ※パスは実際の配置場所に合わせてください
+  model = await Live2DModel.from('/live2d/study/study.model3.json');
 
   // 3. サイズ・位置調整
-  model.x = 250;
-  model.y = 730;
-  model.anchor.set(0.5, 0.5);
-  model.scale.set(0.4);
+  // 画面中央下部に配置する設定
+  model.anchor.set(0.5, 1.0); // 原点を足元中央に
+  model.x = app.screen.width / 2;
+  model.y = app.screen.height;
+  
+  // 画面サイズに応じてスケール調整（スマホで小さくなりすぎないように）
+  const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.8;
+  model.scale.set(scale);
 
-  /* * 以下のイベント関連設定は、システムごと削除したので不要です。
-   * 下手記述すると警告の原因になるので削除しています。
-   * model.interactive = false; 
-   * model.eventMode = 'none';
-   */
+  // 4. ステージに追加
+  app.stage.addChild(model);
 
-  // 4. マウスインタラクション
-  // ★重要：イベントシステムを削除したので動きません。コメントアウトのままにしてください。
-  /*
+  // 5. 初期表示の反映
+  updateAppearance();
+  playMotionByState();
+
+  // クリック・タップイベント
   model.on('hit', (hitAreas) => {
     if (hitAreas.includes('Body')) {
-      model.motion('TapBody');
+      playCheerMotion();
     }
   });
-  */
 
-  app.stage.addChild(model);
-  
-  console.log('Live2D Loaded. Event System Destroyed (Crash prevention mode).');
-});
-
-// 感情変更の監視
-watch(() => props.emotion, (newVal) => {
-  if (!model) return;
-  console.log('感情が変更されました:', newVal);
-  
-  // マウスイベントを使わないモーション再生なら動く可能性があります
-  // try {
-  //   if (newVal === 'celebrate') model.motion('Win');
-  // } catch (e) {
-  //   console.error('モーション再生エラー:', e);
-  // }
+  // リサイズ対応
+  window.addEventListener('resize', onResize);
 });
 
 onBeforeUnmount(() => {
-  if (app) {
-    app.destroy(true, { children: true });
+  window.removeEventListener('resize', onResize);
+  if (app) app.destroy(true);
+});
+
+// ■ 見た目を更新する関数（着せ替え）
+const updateAppearance = () => {
+  if (!model) return;
+
+  const core = model.internalModel.coreModel;
+
+  // 1つのカテゴリ内のパラメータを処理するヘルパー関数
+  const setParamGroup = (categoryName, selectedValue) => {
+    const map = MAPPINGS.params[categoryName];
+    if (!map) return;
+
+    // 定義されている全IDをループして、選ばれたものだけ1、他は0にする
+    Object.entries(map).forEach(([key, paramId]) => {
+      const value = (key === selectedValue) ? 1 : 0;
+      core.setParameterValueById(paramId, value);
+    });
+  };
+
+  // 各パーツを更新
+  setParamGroup('frontHairstyle', props.frontHairstyle);
+  setParamGroup('backHairstyle', props.backHairstyle);
+  setParamGroup('eyes', props.eyes);
+  
+  // 更新を反映
+  core.update();
+};
+
+// ■ モーション再生ロジック
+const playMotionByState = () => {
+  if (!model) return;
+
+  const personalitySuffix = MAPPINGS.personality[props.personality] || 'Genki';
+  let groupName = `Idle_${personalitySuffix}`; // デフォルト
+  let priority = 1;
+
+  // emotionプロップに応じて再生するモーションを変える
+  if (props.emotion === 'celebrate') {
+    groupName = `Success_${personalitySuffix}`;
+    priority = 3; // 優先度高
+  } else if (props.emotion === 'smile') {
+    // smileの時は Cheer モーションなどを割り当ててもOK
+    // ここでは待機モーションのままにするか、応援にするか
+    // 例: groupName = `Cheer_${personalitySuffix}`;
+    groupName = `Idle_${personalitySuffix}`;
   }
+
+  // 再生
+  // (同じグループが再生中の場合は最初から再生されないように制御しても良い)
+  model.motion(groupName, 0, priority);
+};
+
+// 応援モーション（タップ時など）
+const playCheerMotion = () => {
+  if (!model) return;
+  const personalitySuffix = MAPPINGS.personality[props.personality] || 'Genki';
+  model.motion(`Cheer_${personalitySuffix}`, 0, 3).then(() => {
+    playMotionByState(); // 終わったら元の状態に戻る
+  });
+};
+
+// 画面リサイズ処理
+const onResize = () => {
+  if (!app || !model) return;
+  app.resize();
+  model.x = app.screen.width / 2;
+  model.y = app.screen.height;
+};
+
+// ■ 監視（Propsが変わったら即反映）
+watch(() => [props.frontHairstyle, props.backHairstyle, props.eyes], () => {
+  updateAppearance();
+});
+
+watch(() => [props.personality, props.emotion], () => {
+  playMotionByState();
+});
+
+// 親から呼べるように公開（必要であれば）
+defineExpose({
+  playCheerMotion,
+  model
 });
 </script>
 
 <style scoped>
-.live2d-canvas-container {
+.live2d-canvas {
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* 【重要】ブラウザレベルでもマウス入力を無視させる（二重の防御） */
-  pointer-events: none; 
+  display: block;
 }
-canvas {
-  max-width: 100%;
-  max-height: 100%;
-}
-
 </style>

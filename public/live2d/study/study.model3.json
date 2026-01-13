@@ -5,7 +5,54 @@
 		"Textures": [
 			"study.4096/texture_00.png"
 		],
-		"DisplayInfo": "study.cdi3.json"
+		"DisplayInfo": "study.cdi3.json",
+		"Motions": {
+			"Cheer_Genki": [
+				{
+					"File": "Cheer_Genki.motion3.json"
+				}
+			],
+			"Idle_Genki": [
+				{
+					"File": "ParamBreath_Genki.motion3.json"
+				}
+			],
+			"Success_Genki": [
+				{
+					"File": "Success_Genki.motion3.json"
+				}
+			],
+			"Cheer_Iyashi": [
+				{
+					"File": "Cheer_Heal.motion3.json"
+				}
+			],
+			"Idle_Iyashi": [
+				{
+					"File": "ParamBreath_Heal.motion3.json"
+				}
+			],
+			"Success_Iyashi": [
+				{
+					"File": "Success_Heal.motion3.json"
+				}
+			],
+			"Cheer_Cool": [
+				{
+					"File": "Cheer_Cool.motion3.json"
+				}
+			],
+			"Success_Cool": [
+				{
+					"File": "Success_Cool.motion3.json"
+				}
+			],
+			"Idle_Cool": [
+				{
+					"File": "ParamBreath_Cool.motion3.json"
+				}
+			]
+		}
 	},
 	"Groups": [
 		{
@@ -18,5 +65,6 @@
 			"Name": "LipSync",
 			"Ids": []
 		}
-	]
+	],
+	"HitAreas": []
 }
