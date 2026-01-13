@@ -75,6 +75,9 @@ const MAPPINGS = {
 /* =====================
   初期化
 ===================== */
+/* =====================
+  初期化
+===================== */
 onMounted(async () => {
   if (!canvasRef.value) return
 
@@ -115,19 +118,15 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // 毎フレーム見た目を更新（モーション上書き対策）
-  app.ticker.add(() => {
-    updateAppearance()
-  })
+  // ★★★ ここを修正（決定版） ★★★
+  // model.on は削除し、app.ticker.add に戻します。
+  // ただし、第3引数に「PIXI.UPDATE_PRIORITY.UTILITY」を指定します。
+  // これは「一番最後に実行する」という意味で、モーション計算後に確実に上書きできます。
+  app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
 
   playMotionByState()
 
   window.addEventListener('resize', onResize)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize)
-  if (app) app.destroy(true, { children: true })
 })
 
 /* =====================
