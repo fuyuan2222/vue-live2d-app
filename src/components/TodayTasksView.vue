@@ -48,12 +48,7 @@ const { characterPersonality } = inject('character-data')
 
 /* state */
 const showCompleteEffect = ref(false)
-const currentFocus = ref('neutral') 
 
-// 画面のフォーカスを切り替える関数
-const setFocus = (target) => {
-  currentFocus.value = target
-}
 
 /* 今日のタスク */
 const filteredTodayTasks = computed(() => {

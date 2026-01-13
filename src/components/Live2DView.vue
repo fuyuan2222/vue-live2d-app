@@ -1,16 +1,12 @@
-<template>
-  <div class="live2d-canvas-container">
-    <canvas ref="canvasRef"></canvas>
-  </div>
-</template>
-
 <script setup>
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import * as PIXI from 'pixi.js';
 import { Live2DModel } from 'pixi-live2d-display/cubism4';
 
+// PIXIをウィンドウに公開（デバッグ用・プラグイン用）
 window.PIXI = PIXI;
 
+// ★ propsは1回だけ定義（デフォルト値付きの方を採用）
 const props = defineProps({
   emotion: { type: String, default: 'idle' },
   personality: { type: String, default: '元気系' },
@@ -24,31 +20,23 @@ let app = null;
 let model = null;
 
 // ■■■ 設定：IDマッピング表 ■■■
+// ※ Live2D Editor上のIDと完全に一致させる必要があります
 const MAPPINGS = {
-  // ★重要修正：JSONファイルの名前と一字一句同じにします
+  // モーショングループ名
   motions: {
-    '元気系': { 
-      idle: 'Idle_Genki',
-      success: 'Success_Genki'
-    },
-    '癒し系': { 
-      idle: 'Idle_Heal',      
-      success: 'Success_Heal' 
-    },
-    'クール系': { 
-      idle: 'Idle_Cool', 
-      success: 'Success_Cool' 
-    }
+    '元気系': { idle: 'Idle_Genki', success: 'Success_Genki' },
+    '癒し系': { idle: 'Idle_Heal',  success: 'Success_Heal' },
+    'クール系': { idle: 'Idle_Cool',  success: 'Success_Cool' }
   },
   
-  // 服装パラメータ
+  // 服装パラメータID
   outfits: {
     '元気系': 'Outfit_Power',
     '癒し系': 'Outfit_heal', 
     'クール系': 'Outfit_Cool'
   },
 
-  // 髪型・目
+  // 髪型・目 パラメータID
   params: {
     frontHairstyle: {
       'ぱっつん': 'ParamFrontHair_pattun',
@@ -81,21 +69,13 @@ onMounted(async () => {
     antialias: true
   });
 
-  // クラッシュ防止
-  if (app.renderer.events) {
-    app.renderer.events.destroy();
-    delete app.renderer.events;
-  }
-  if (app.renderer.plugins && app.renderer.plugins.interaction) {
-    app.renderer.plugins.interaction.destroy();
-    delete app.renderer.plugins.interaction;
-  }
-
   // モデル読み込み
+  // ※パスが正しいか確認してください
   model = await Live2DModel.from('/live2d/study/study.model3.json', {
     autoInteract: false
   });
 
+  // 位置・サイズ調整
   model.anchor.set(0.5, 1.0);
   model.x = app.screen.width / 2;
   model.y = app.screen.height;
@@ -105,6 +85,7 @@ onMounted(async () => {
 
   app.stage.addChild(model);
 
+  // 初期表示の反映
   updateAppearance();
   playMotionByState();
 
@@ -121,12 +102,13 @@ onBeforeUnmount(() => {
 // ■ 着せ替えロジック
 const updateAppearance = () => {
   if (!model) return;
+  
+  // Cubism4の場合のコアモデル参照
   const core = model.internalModel.coreModel;
 
   // 1. 服装切り替え
   const outfitMap = MAPPINGS.outfits;
   Object.entries(outfitMap).forEach(([personalityName, paramId]) => {
-    // 現在の性格なら1、それ以外は0
     const val = (personalityName === props.personality) ? 1 : 0;
     core.setParameterValueById(paramId, val);
   });
@@ -145,37 +127,33 @@ const updateAppearance = () => {
   setParamGroup('backHairstyle', props.backHairstyle);
   setParamGroup('eyes', props.eyes);
   
-  core.update();
+  // パラメータ更新を通知（必須ではない場合もありますが念のため）
+  model.internalModel.update();
 };
 
-// ■ モーション再生（ここを修正！）
+// ■ モーション再生
 const playMotionByState = () => {
   if (!model) return;
   
-  // マッピングから、性格に応じた「モーション名セット」を取得
-  const motionSet = MAPPINGS.motions[props.personality];
+  const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系'];
   
-  // もし定義が見つからなければデフォルト（元気系）へ
-  const targetSet = motionSet || MAPPINGS.motions['元気系'];
-
-  let groupName = targetSet.idle; // デフォルトは待機モーション
+  let groupName = motionSet.idle;
   let priority = 1;
 
-  // 感情がcelebrateなら成功モーションへ
   if (props.emotion === 'celebrate') {
-    groupName = targetSet.success;
+    groupName = motionSet.success;
     priority = 3; 
   }
 
   try {
-    // 指定したグループ名を再生
-    console.log(`Playing Motion: ${groupName}`); // デバッグ用ログ
+    // モーション再生（グループ名が存在しないとエラーになるので注意）
     model.motion(groupName, 0, priority);
   } catch (e) {
-    console.warn('Motion play failed:', e);
+    console.warn(`Motion play failed: ${groupName}`, e);
   }
 };
 
+// 監視設定
 watch(
   () => [props.frontHairstyle, props.backHairstyle, props.eyes, props.personality], 
   () => updateAppearance()
@@ -193,18 +171,3 @@ const onResize = () => {
   model.y = app.screen.height;
 };
 </script>
-
-<style scoped>
-.live2d-canvas-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  pointer-events: none; 
-}
-canvas {
-  width: 100%;
-  height: 100%;
-}
-</style>
