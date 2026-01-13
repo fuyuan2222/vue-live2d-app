@@ -9,11 +9,10 @@ import { defineProps, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as PIXI from 'pixi.js'
 import { Live2DModel } from 'pixi-live2d-display/cubism4'
 
-/* pixi-live2d-display 用 */
 window.PIXI = PIXI
 
 /* =====================
-  props
+   props
 ===================== */
 const props = defineProps({
   emotion: { type: String, default: 'idle' },        
@@ -26,33 +25,22 @@ const props = defineProps({
 const canvasRef = ref(null)
 let app = null
 let model = null
+let isDebugLogged = false // デバッグログ用フラグ
 
 /* =====================
-  マッピング定義
-  ※ study.model3.json のキー名と一致させる
+   マッピング定義
 ===================== */
 const MAPPINGS = {
   motions: {
-    '元気系': {
-      idle: 'Idle_Genki',
-      success: 'Success_Genki'
-    },
-    '癒し系': {
-      idle: 'Idle_Heal',
-      success: 'Success_Heal'
-    },
-    'クール系': {
-      idle: 'Idle_Cool',
-      success: 'Success_Cool'
-    }
+    '元気系': { idle: 'Idle_Genki', success: 'Success_Genki' },
+    '癒し系': { idle: 'Idle_Heal',  success: 'Success_Heal' },
+    'クール系': { idle: 'Idle_Cool',  success: 'Success_Cool' }
   },
-
   outfits: {
     '元気系': 'Outfit_Power',
     '癒し系': 'Outfit_Heal',
     'クール系': 'Outfit_Cool'
   },
-
   params: {
     frontHairstyle: {
       'ぱっつん': 'ParamFrontHair_Pattun',
@@ -65,15 +53,15 @@ const MAPPINGS = {
       'ショート': 'ParamBackHair_Short'
     },
     eyes: {
-      '丸目': 'ParamEyeStyle_Round',
-      'たれ目': 'ParamEye_Droop',
-      '釣り目': 'ParamEye_Sharp'
+      '丸目': 'ParamEyeType_Round', // ※ID名要確認
+      'たれ目': 'ParamEyeType_Droop',
+      '釣り目': 'ParamEyeType_Sharp'
     }
   }
 }
 
 /* =====================
-  初期化
+   初期化
 ===================== */
 onMounted(async () => {
   if (!canvasRef.value) return
@@ -81,45 +69,39 @@ onMounted(async () => {
   app = new PIXI.Application({
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
-    backgroundAlpha: 0,
+    backgroundAlpha: 0, 
     autoDensity: true,
     resolution: window.devicePixelRatio || 1,
     antialias: true
   })
 
-  /* interaction クラッシュ回避 */
-  if (app.renderer.events) {
-    app.renderer.events.destroy()
-    delete app.renderer.events
-  }
-  if (app.renderer.plugins?.interaction) {
-    app.renderer.plugins.interaction.destroy()
-    delete app.renderer.plugins.interaction
-  }
-
+  // モデル読み込み
   model = await Live2DModel.from(
     '/live2d/study/study.model3.json',
     { autoInteract: false }
   )
 
-  model.anchor.set(0.5, 1)
+  // ■ 位置合わせ（足元基準）
+  model.anchor.set(0.5, 1.0) 
   model.x = app.screen.width / 2
   model.y = app.screen.height
 
-  const scale =
-    Math.min(
+  // ■ スケール調整
+  // 1.6倍は大きすぎて顔が見切れる可能性が高いので、まずは0.8倍くらいからスタート推奨
+  const scale = Math.min(
       app.screen.width / model.width,
       app.screen.height / model.height
-    ) * 1.6
+  ) * 0.9; 
 
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // 毎フレーム見た目を更新（モーション上書き対策）
+  // ■ 毎フレーム更新（パラメータ強制上書き）
   app.ticker.add(() => {
     updateAppearance()
   })
 
+  // 初回モーション再生
   playMotionByState()
 
   window.addEventListener('resize', onResize)
@@ -131,151 +113,110 @@ onBeforeUnmount(() => {
 })
 
 /* =====================
-  見た目切り替え
+   見た目切り替え（パラメータ更新）
 ===================== */
-// const updateAppearance = () => {
-//   if (!model) return
-//   const core = model.internalModel.coreModel
-
-//   /* 服装 */
-//   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-//     core.setParameterValueById(
-//       paramId,
-//       key === props.personality ? 1 : 0
-//     )
-//   })
-
-//   /* パーツ */
-//   const setParamGroup = (group, selected) => {
-//     const map = MAPPINGS.params[group]
-//     Object.entries(map).forEach(([name, id]) => {
-//       core.setParameterValueById(id, name === selected ? 1 : 0)
-//     })
-//   }
-
-//   setParamGroup('frontHairstyle', props.frontHairstyle)
-//   setParamGroup('backHairstyle', props.backHairstyle)
-//   setParamGroup('eyes', props.eyes)
-// }
-// デバッグ用のフラグ（スクリプトの一番上に書いてもOK）
-let isDebugLogged = false
-
 const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
-  // ★デバッグ：最初の1回だけ、すべての情報を吐き出す
+  // ★★★ デバッグ機能：修正版 ★★★
+  // C++の配列は .includes() が使えないため、ループでIDリストを作る必要があります
   if (!isDebugLogged) {
-    console.group("🔍 Live2D Custom Debug")
+    console.group("🔍 Live2D ID Check Mode")
     
-    // 1. 親からデータが来ているか確認
-    console.log("① Props Data:", {
-      front: props.frontHairstyle,
-      back: props.backHairstyle,
-      eyes: props.eyes,
-      personality: props.personality
-    })
-
-    // 2. モデルが持っている全パラメータIDを表示（ここが一番大事！）
-    // ※SDKのバージョンによってプロパティ名が違うことがあるので念のため複数チェック
-    const allIds = core._parameterIds || core.getParameterIds()
-    console.log("② Model Actual IDs:", allIds)
-
-    // 3. マッピングしようとしているIDが、本当にモデルにあるかチェック
-    console.log("③ ID Matching Check:")
-    
-    const checkId = (groupName, currentVal) => {
-      const map = MAPPINGS.params[groupName]
-      Object.entries(map).forEach(([name, id]) => {
-        const exists = allIds.includes(id)
-        const status = exists ? "✅ OK" : "❌ MISSING"
-        const isSelected = (name === currentVal) ? "★SELECTED" : ""
-        console.log(`[${groupName}] ${name} -> ID: ${id} ... ${status} ${isSelected}`)
-      })
+    // 1. モデル内の全パラメータIDを取得してJSの配列にする
+    const paramCount = core.getParameterCount()
+    const allIds = []
+    for(let i=0; i<paramCount; i++){
+        allIds.push(core.getParameterId(i))
     }
+    console.log("Model has these IDs:", allIds)
 
-    checkId('frontHairstyle', props.frontHairstyle)
-    checkId('backHairstyle', props.backHairstyle)
-    checkId('eyes', props.eyes)
+    // 2. マッピングとの照合
+    const checkGroup = (groupName, currentVal) => {
+        const map = MAPPINGS.params[groupName]
+        if(!map) return
+        Object.entries(map).forEach(([name, id]) => {
+            const exists = allIds.includes(id) // これでチェック可能になる
+            const icon = exists ? "✅" : "❌ NOT FOUND"
+            const styles = exists ? "color: green" : "color: red; font-weight: bold"
+            console.log(`%c[${groupName}] ${name} -> ${id} : ${icon}`, styles)
+        })
+    }
+    checkGroup('frontHairstyle', props.frontHairstyle)
+    checkGroup('backHairstyle', props.backHairstyle)
+    checkGroup('eyes', props.eyes)
+    checkGroup('outfits', 'CheckOutfitParams') // 服装パラメータも確認用
 
     console.groupEnd()
-    isDebugLogged = true // フラグを立ててログ停止
+    isDebugLogged = true
   }
+  // ★★★★★★★★★★★★★★★★★
 
-  // --- 本来の処理 ---
-  /* 服装 */
+  // ■ 服装
   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-    core.setParameterValueById(paramId, key === props.personality ? 1 : 0)
+    // IDが存在するかチェックしてからセット（エラー防止）
+    if(core.getParameterIndex(paramId) !== -1) {
+        core.setParameterValueById(paramId, key === props.personality ? 1 : 0)
+    }
   })
 
-  /* 前髪・後ろ髪・目 */
+  // ■ 髪・目
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
+    if(!map) return
     Object.entries(map).forEach(([name, id]) => {
-      core.setParameterValueById(id, name === selected ? 1 : 0)
+       if(core.getParameterIndex(id) !== -1) {
+          core.setParameterValueById(id, name === selected ? 1 : 0)
+       }
     })
   }
 
   setParamGroup('frontHairstyle', props.frontHairstyle)
   setParamGroup('backHairstyle', props.backHairstyle)
   setParamGroup('eyes', props.eyes)
+  
+  // 更新通知
+  model.internalModel.update()
 }
 
 /* =====================
-  モーション再生（ループ対応版）
+   モーション再生
 ===================== */
-const playMotionByState = async () => {
+const playMotionByState = () => {
   if (!model) return
 
-  // 現在の設定から再生すべきモーション名を決定
   const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
   let groupName = motionSet.idle
-  let priority = 1
-  let isIdle = true // アイドルモーションかどうか
+  let priority = 1 // 1: Idle, 2: Normal, 3: Force
 
   if (props.emotion === 'celebrate') {
     groupName = motionSet.success
     priority = 3
-    isIdle = false
   }
 
-  // 再生開始
-  // awaitをつけることで、再生が終わるまで待機できる
-  const finished = await model.motion(groupName, 0, { priority })
-
-  // ★ループ処理のキモ★
-  // 1. 再生が正常に終わった (finished === true)
-  // 2. まだアイドル状態であるべき (isIdle === true)
-  // 3. ユーザーが設定を変えていない (今のpropsと同じモーションである)
-  if (finished && isIdle) {
-    const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
-    
-    // まだ同じモーションを再生すべき状態なら、自分自身を再帰呼び出ししてループさせる
-    if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
-      playMotionByState()
-    }
+  // 再生（エラーが出ても止まらないようにtry-catch）
+  try {
+      // 第2引数はindex(基本的に0), 第3引数は優先度
+      model.motion(groupName, 0, priority)
+  } catch(e) {
+      console.warn(`Motion [${groupName}] not found or failed.`, e)
   }
 }
 
 /* =====================
-  watch
+   Watch & Resize
 ===================== */
 watch(
   () => [props.personality, props.emotion],
-  () => {
-    // 設定が変わったら即座に新しいモーションを再生
-    // これにより、ループ待機中の古いモーションはキャンセルされ、新しいのが始まる
-    playMotionByState()
-  },
-  { immediate: true }
+  () => { playMotionByState() },
+  { immediate: false } // onMountedで一度呼ぶのでfalse推奨
 )
 
-/* =====================
-  resize
-===================== */
 const onResize = () => {
   if (!app || !model) return
   app.resize()
+  // リサイズ時も中央下揃え
   model.x = app.screen.width / 2
   model.y = app.screen.height
 }
@@ -290,7 +231,6 @@ const onResize = () => {
   align-items: flex-end;
   pointer-events: none;
 }
-
 canvas {
   width: 100%;
   height: 100%;
