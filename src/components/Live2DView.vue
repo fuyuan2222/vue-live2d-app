@@ -29,6 +29,7 @@ let model = null
 
 /* =====================
   マッピング定義
+  ※ study.model3.json のキー名と一致させる
 ===================== */
 const MAPPINGS = {
   motions: {
@@ -86,7 +87,7 @@ onMounted(async () => {
     antialias: true
   })
 
-  /* interaction 周りのクラッシュ回避 */
+  /* interaction クラッシュ回避 */
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -114,9 +115,7 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // ★修正ポイント：Tickerに追加
-  // これにより毎フレーム updateAppearance が実行され、
-  // モーションによるパラメータの上書きを強制的に修正します。
+  // 毎フレーム見た目を更新（モーション上書き対策）
   app.ticker.add(() => {
     updateAppearance()
   })
@@ -132,7 +131,7 @@ onBeforeUnmount(() => {
 })
 
 /* =====================
-  見た目切り替え（毎フレーム実行）
+  見た目切り替え
 ===================== */
 const updateAppearance = () => {
   if (!model) return
@@ -146,7 +145,7 @@ const updateAppearance = () => {
     )
   })
 
-  /* 前髪・後ろ髪・目 */
+  /* パーツ */
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
     Object.entries(map).forEach(([name, id]) => {
@@ -157,42 +156,54 @@ const updateAppearance = () => {
   setParamGroup('frontHairstyle', props.frontHairstyle)
   setParamGroup('backHairstyle', props.backHairstyle)
   setParamGroup('eyes', props.eyes)
-
-  // core.update() はTicker内で自動処理されるため削除しました
 }
 
 /* =====================
-  モーション再生
+  モーション再生（ループ対応版）
 ===================== */
-const playMotionByState = () => {
+const playMotionByState = async () => {
   if (!model) return
 
-  const motionSet =
-    MAPPINGS.motions[props.personality] ||
-    MAPPINGS.motions['元気系']
-
+  // 現在の設定から再生すべきモーション名を決定
+  const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
   let groupName = motionSet.idle
   let priority = 1
+  let isIdle = true // アイドルモーションかどうか
 
   if (props.emotion === 'celebrate') {
     groupName = motionSet.success
     priority = 3
+    isIdle = false
   }
 
-  // console.log('Play Motion:', groupName)
+  // 再生開始
+  // awaitをつけることで、再生が終わるまで待機できる
+  const finished = await model.motion(groupName, 0, { priority })
 
-  model.motion(groupName, 0, { priority })
+  // ★ループ処理のキモ★
+  // 1. 再生が正常に終わった (finished === true)
+  // 2. まだアイドル状態であるべき (isIdle === true)
+  // 3. ユーザーが設定を変えていない (今のpropsと同じモーションである)
+  if (finished && isIdle) {
+    const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
+    
+    // まだ同じモーションを再生すべき状態なら、自分自身を再帰呼び出ししてループさせる
+    if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
+      playMotionByState()
+    }
+  }
 }
 
 /* =====================
   watch
 ===================== */
-// 外見のwatchは不要になりました（Tickerが常に監視しているため）
-
-// モーションのトリガーは必要なので残す
 watch(
   () => [props.personality, props.emotion],
-  playMotionByState,
+  () => {
+    // 設定が変わったら即座に新しいモーションを再生
+    // これにより、ループ待機中の古いモーションはキャンセルされ、新しいのが始まる
+    playMotionByState()
+  },
   { immediate: true }
 )
 
