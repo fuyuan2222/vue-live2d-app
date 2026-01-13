@@ -71,7 +71,6 @@ const MAPPINGS = {
   }
 }
 
-
 /* =====================
   初期化
 ===================== */
@@ -115,7 +114,13 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  updateAppearance()
+  // ★修正ポイント：Tickerに追加
+  // これにより毎フレーム updateAppearance が実行され、
+  // モーションによるパラメータの上書きを強制的に修正します。
+  app.ticker.add(() => {
+    updateAppearance()
+  })
+
   playMotionByState()
 
   window.addEventListener('resize', onResize)
@@ -127,7 +132,7 @@ onBeforeUnmount(() => {
 })
 
 /* =====================
-  見た目切り替え
+  見た目切り替え（毎フレーム実行）
 ===================== */
 const updateAppearance = () => {
   if (!model) return
@@ -141,7 +146,7 @@ const updateAppearance = () => {
     )
   })
 
-  /* 前髪・後ろ髪・目（排他的ON/OFF） */
+  /* 前髪・後ろ髪・目 */
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
     Object.entries(map).forEach(([name, id]) => {
@@ -153,11 +158,11 @@ const updateAppearance = () => {
   setParamGroup('backHairstyle', props.backHairstyle)
   setParamGroup('eyes', props.eyes)
 
-  core.update()
+  // core.update() はTicker内で自動処理されるため削除しました
 }
 
 /* =====================
-  モーション再生（重要）
+  モーション再生
 ===================== */
 const playMotionByState = () => {
   if (!model) return
@@ -174,26 +179,17 @@ const playMotionByState = () => {
     priority = 3
   }
 
-  console.log('Play Motion:', groupName)
+  // console.log('Play Motion:', groupName)
 
-  /* ★ここが最重要ポイント */
   model.motion(groupName, 0, { priority })
 }
 
 /* =====================
   watch
 ===================== */
-watch(
-  () => [
-    props.frontHairstyle,
-    props.backHairstyle,
-    props.eyes,
-    props.personality
-  ],
-  updateAppearance,
-  { immediate: true }
-)
+// 外見のwatchは不要になりました（Tickerが常に監視しているため）
 
+// モーションのトリガーは必要なので残す
 watch(
   () => [props.personality, props.emotion],
   playMotionByState,
