@@ -1,16 +1,5 @@
 <template>
   <section class="character-customization">
-    <h2>キャラクター設定</h2>
-    <div class="live2d-preview-container">
-      <Live2DModel
-        :emotion="getEmotion"
-        :personality="characterPersonality"
-        :front-hairstyle="characterFrontHairstyle"
-        :back-hairstyle="characterBackHairstyle"
-        :eyes="characterEyes" 
-      />
-      </div>
-
     <div class="customization-options">
       <div class="option-group">
         <h3>性格</h3>
@@ -24,10 +13,9 @@
       <div class="option-group">
         <h3>後ろ髪</h3>
         <select v-model="characterBackHairstyle">
-          <option value="ロング">ロング</option>
-          <option value="ボブ">ボブ</option>
+          <option value="一つ結び">一つ結び</option>
           <option value="ショート">ショート</option>
-          <option value="ツイン">ツイン</option>
+          <option value="サイドテール">サイドテール</option>
         </select>
       </div>
 
@@ -36,7 +24,7 @@
         <select v-model="characterFrontHairstyle">
           <option value="ぱっつん">ぱっつん</option>
           <option value="３つ分け">３つ分け</option>
-          <option value="２・８分け">２．８分け</option>
+          <option value="２・８分け">２・８分け</option>
         </select>
       </div>
 
