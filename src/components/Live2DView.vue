@@ -5,53 +5,53 @@
 </template>
 
 <script setup>
-import { watch, defineProps, onMounted, ref } from 'vue'
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import * as PIXI from 'pixi.js';
-import { Live2DModel } from 'pixi-live2d-display/cubism4';
+import { defineProps, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import * as PIXI from 'pixi.js'
+import { Live2DModel } from 'pixi-live2d-display/cubism4'
 
-window.PIXI = PIXI;
+/* pixi-live2d-display 用 */
+window.PIXI = PIXI
 
-
-
+/* =====================
+  props
+===================== */
 const props = defineProps({
-  emotion: { type: String, default: 'idle' },
-  personality: { type: String, default: '元気系' },
+  emotion: { type: String, default: 'idle' },        // idle | celebrate | smile
+  personality: { type: String, default: '元気系' }, // 元気系 | 癒し系 | クール系
   frontHairstyle: { type: String, default: 'ぱっつん' },
-  backHairstyle: { type: String, default: 'サイドテール' }, 
+  backHairstyle: { type: String, default: 'サイドテール' },
   eyes: { type: String, default: '丸目' }
-});
+})
 
-const canvasRef = ref(null);
-let app = null;
-let model = null;
+const canvasRef = ref(null)
+let app = null
+let model = null
 
-// ■■■ 設定：IDマッピング表 ■■■
+/* =====================
+  マッピング定義
+===================== */
 const MAPPINGS = {
-  // ★重要修正：JSONファイルの名前と一字一句同じにします
   motions: {
-    '元気系': { 
+    '元気系': {
       idle: 'Idle_Genki',
       success: 'Success_Genki'
     },
-    '癒し系': { 
-      idle: 'Idle_Heal',      
-      success: 'Success_Heal' 
+    '癒し系': {
+      idle: 'Idle_Heal',
+      success: 'Success_Heal'
     },
-    'クール系': { 
-      idle: 'Idle_Cool', 
-      success: 'Success_Cool' 
+    'クール系': {
+      idle: 'Idle_Cool',
+      success: 'Success_Cool'
     }
   },
-  
-  // 服装パラメータ
+
   outfits: {
     '元気系': 'Outfit_Power',
-    '癒し系': 'Outfit_Heal', 
+    '癒し系': 'Outfit_Heal',
     'クール系': 'Outfit_Cool'
   },
 
-  // 髪型・目
   params: {
     frontHairstyle: {
       'ぱっつん': 'ParamFrontHair_Pattun',
@@ -69,132 +69,146 @@ const MAPPINGS = {
       '釣り目': 'ParamEyeType_Sharp'
     }
   }
-};
+}
 
+/* =====================
+  初期化
+===================== */
 onMounted(async () => {
-  if (!canvasRef.value) return;
+  if (!canvasRef.value) return
 
   app = new PIXI.Application({
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
     backgroundAlpha: 0,
-    autoStart: true,
-    resolution: window.devicePixelRatio || 2,
     autoDensity: true,
+    resolution: window.devicePixelRatio || 1,
     antialias: true
-  });
+  })
 
-  // クラッシュ防止
+  /* interaction 周りのクラッシュ回避 */
   if (app.renderer.events) {
-    app.renderer.events.destroy();
-    delete app.renderer.events;
+    app.renderer.events.destroy()
+    delete app.renderer.events
   }
-  if (app.renderer.plugins && app.renderer.plugins.interaction) {
-    app.renderer.plugins.interaction.destroy();
-    delete app.renderer.plugins.interaction;
+  if (app.renderer.plugins?.interaction) {
+    app.renderer.plugins.interaction.destroy()
+    delete app.renderer.plugins.interaction
   }
 
-  // モデル読み込み
-  model = await Live2DModel.from('/live2d/study/study.model3.json', {
-    autoInteract: false
-  });
+  model = await Live2DModel.from(
+    '/live2d/study/study.model3.json',
+    { autoInteract: false }
+  )
 
-  model.anchor.set(0.5, 1.0);
-  model.x = app.screen.width / 2;
-  model.y = app.screen.height;
-  
-  const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.8;
-  model.scale.set(scale);
+  model.anchor.set(0.5, 1)
+  model.x = app.screen.width / 2
+  model.y = app.screen.height
 
-  app.stage.addChild(model);
+  const scale =
+    Math.min(
+      app.screen.width / model.width,
+      app.screen.height / model.height
+    ) * 1.6
 
-  updateAppearance();
-  playMotionByState();
+  model.scale.set(scale)
+  app.stage.addChild(model)
 
-  window.addEventListener('resize', onResize);
-});
+  updateAppearance()
+  playMotionByState()
+
+  window.addEventListener('resize', onResize)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize);
-  if (app) {
-    app.destroy(true, { children: true });
-  }
-});
+  window.removeEventListener('resize', onResize)
+  if (app) app.destroy(true, { children: true })
+})
 
-// ■ 着せ替えロジック
+/* =====================
+  見た目切り替え
+===================== */
 const updateAppearance = () => {
-  if (!model) return;
-  const core = model.internalModel.coreModel;
+  if (!model) return
+  const core = model.internalModel.coreModel
 
-  // 1. 服装切り替え
-  const outfitMap = MAPPINGS.outfits;
-  Object.entries(outfitMap).forEach(([personalityName, paramId]) => {
-    // 現在の性格なら1、それ以外は0
-    const val = (personalityName === props.personality) ? 1 : 0;
-    core.setParameterValueById(paramId, val);
-  });
+  /* 服装 */
+  Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
+    core.setParameterValueById(
+      paramId,
+      key === props.personality ? 1 : 0
+    )
+  })
 
-  // 2. 髪型・目の切り替え
-  const setParamGroup = (categoryName, selectedValue) => {
-    const map = MAPPINGS.params[categoryName];
-    if (!map) return;
-    Object.entries(map).forEach(([optionName, paramId]) => {
-      const value = (optionName === selectedValue) ? 1 : 0;
-      core.setParameterValueById(paramId, value);
-    });
-  };
+  /* 髪型・目 */
+  const setParamGroup = (group, value) => {
+    const map = MAPPINGS.params[group]
+    if (!map) return
+    Object.entries(map).forEach(([name, id]) => {
+      core.setParameterValueById(id, name === value ? 1 : 0)
+    })
+  }
 
-  setParamGroup('frontHairstyle', props.frontHairstyle);
-  setParamGroup('backHairstyle', props.backHairstyle);
-  setParamGroup('eyes', props.eyes);
-  
-  core.update();
-};
+  setParamGroup('frontHairstyle', props.frontHairstyle)
+  setParamGroup('backHairstyle', props.backHairstyle)
+  setParamGroup('eyes', props.eyes)
 
-// ■ モーション再生（ここを修正！）
+  core.update()
+}
+
+/* =====================
+  モーション再生（重要）
+===================== */
 const playMotionByState = () => {
-  if (!model) return;
-  
-  // マッピングから、性格に応じた「モーション名セット」を取得
-  const motionSet = MAPPINGS.motions[props.personality];
-  
-  // もし定義が見つからなければデフォルト（元気系）へ
-  const targetSet = motionSet || MAPPINGS.motions['元気系'];
+  if (!model) return
 
-  let groupName = targetSet.idle; // デフォルトは待機モーション
-  let priority = 1;
+  const motionSet =
+    MAPPINGS.motions[props.personality] ||
+    MAPPINGS.motions['元気系']
 
-  // 感情がcelebrateなら成功モーションへ
+  let groupName = motionSet.idle
+  let priority = 1
+
   if (props.emotion === 'celebrate') {
-    groupName = targetSet.success;
-    priority = 3; 
+    groupName = motionSet.success
+    priority = 3
   }
 
-  try {
-    // 指定したグループ名を再生
-    console.log(`Playing Motion: ${groupName}`); // デバッグ用ログ
-    model.motion(groupName, 0, priority);
-  } catch (e) {
-    console.warn('Motion play failed:', e);
-  }
-};
+  console.log('Play Motion:', groupName)
+
+  /* ★ここが最重要ポイント */
+  model.motion(groupName, 0, { priority })
+}
+
+/* =====================
+  watch
+===================== */
+watch(
+  () => [
+    props.frontHairstyle,
+    props.backHairstyle,
+    props.eyes,
+    props.personality
+  ],
+  updateAppearance,
+  { immediate: true }
+)
 
 watch(
-  () => [props.frontHairstyle, props.backHairstyle, props.eyes, props.personality], 
-  () => updateAppearance()
-);
+  () => [props.personality, props.emotion],
+  playMotionByState,
+  { immediate: true }
+)
 
-watch(
-  () => [props.personality, props.emotion], 
-  () => playMotionByState()
-);
-
+/* =====================
+  resize
+===================== */
 const onResize = () => {
-  if (!app || !model) return;
-  app.resize();
-  model.x = app.screen.width / 2;
-  model.y = app.screen.height;
-};
+  if (!app || !model) return
+  app.resize()
+  model.x = app.screen.width / 2
+  model.y = app.screen.height
+}
 </script>
 
 <style scoped>
@@ -204,8 +218,9 @@ const onResize = () => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  pointer-events: none; 
+  pointer-events: none;
 }
+
 canvas {
   width: 100%;
   height: 100%;
