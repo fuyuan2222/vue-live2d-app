@@ -1,8 +1,19 @@
+<template>
+  <div class="live2d-canvas-container">
+    <canvas ref="canvasRef"></canvas>
+  </div>
+</template>
+
 <script setup>
+import { watch, defineProps, onMounted, ref } from 'vue'
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import * as PIXI from 'pixi.js';
+import { Live2DModel } from 'pixi-live2d-display/cubism4';
 
-// props定義
+window.PIXI = PIXI;
+
+
+
 const props = defineProps({
   emotion: { type: String, default: 'idle' },
   personality: { type: String, default: '元気系' },
@@ -15,18 +26,32 @@ const canvasRef = ref(null);
 let app = null;
 let model = null;
 
-// IDマッピング表
+// ■■■ 設定：IDマッピング表 ■■■
 const MAPPINGS = {
+  // ★重要修正：JSONファイルの名前と一字一句同じにします
   motions: {
-    '元気系': { idle: 'Idle_Genki', success: 'Success_Genki' },
-    '癒し系': { idle: 'Idle_Heal',  success: 'Success_Heal' },
-    'クール系': { idle: 'Idle_Cool',  success: 'Success_Cool' }
+    '元気系': { 
+      idle: 'Idle_Genki',
+      success: 'Success_Genki'
+    },
+    '癒し系': { 
+      idle: 'Idle_Heal',      
+      success: 'Success_Heal' 
+    },
+    'クール系': { 
+      idle: 'Idle_Cool', 
+      success: 'Success_Cool' 
+    }
   },
+  
+  // 服装パラメータ
   outfits: {
     '元気系': 'Outfit_Power',
     '癒し系': 'Outfit_Heal', 
     'クール系': 'Outfit_Cool'
   },
+
+  // 髪型・目
   params: {
     frontHairstyle: {
       'ぱっつん': 'ParamFrontHair_Pattun',
@@ -49,54 +74,42 @@ const MAPPINGS = {
 onMounted(async () => {
   if (!canvasRef.value) return;
 
-  // ★重要修正：PIXIを登録してから、Live2Dライブラリを「動的に」読み込む
-  window.PIXI = PIXI;
-  const { Live2DModel } = await import('pixi-live2d-display/cubism4');
-
   app = new PIXI.Application({
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
-    backgroundAlpha: 0.5, // ★背景をグレーにしてモデルを見やすくする
+    backgroundAlpha: 0,
     autoStart: true,
     resolution: window.devicePixelRatio || 2,
     autoDensity: true,
     antialias: true
   });
 
-  try {
-    model = await Live2DModel.from('/live2d/study/study.model3.json', { autoInteract: false });
-
-    // ■■■■■ ここが修正ポイント！ ■■■■■
-    
-    // 1. アンカーを「足元(1.0)」から「中心(0.5)」に変更
-    model.anchor.set(0.5, 0.5);
-
-    // 2. 画面の「ど真ん中」に配置
-    model.x = app.screen.width / 2;
-    model.y = app.screen.height / 2;
-    
-    // 3. スケールを「1.8倍」から「0.6倍」に縮小して全体を映す
-    const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 0.6;
-    model.scale.set(scale);
-
-    app.stage.addChild(model);
-    console.log("Model loaded successfully!");
-
-    // ■■■ 正しいIDをコンソールに出力 ■■■
-    const core = model.internalModel.coreModel;
-    console.warn("▼▼▼ パラメータID一覧 (ここにあるIDをMAPPINGSに書いてください) ▼▼▼");
-    const paramCount = core.getParameterCount();
-    for (let i = 0; i < paramCount; i++) {
-        console.log(`ID: ${core.getParameterId(i)}`);
-    }
-
-    // 初期表示の反映
-    updateAppearance();
-    playMotionByState();
-
-  } catch (e) {
-    console.error("Model loading failed:", e);
+  // クラッシュ防止
+  if (app.renderer.events) {
+    app.renderer.events.destroy();
+    delete app.renderer.events;
   }
+  if (app.renderer.plugins && app.renderer.plugins.interaction) {
+    app.renderer.plugins.interaction.destroy();
+    delete app.renderer.plugins.interaction;
+  }
+
+  // モデル読み込み
+  model = await Live2DModel.from('/live2d/study/study.model3.json', {
+    autoInteract: false
+  });
+
+  model.anchor.set(0.5, 1.0);
+  model.x = app.screen.width / 2;
+  model.y = app.screen.height;
+  
+  const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.8;
+  model.scale.set(scale);
+
+  app.stage.addChild(model);
+
+  updateAppearance();
+  playMotionByState();
 
   window.addEventListener('resize', onResize);
 });
@@ -113,24 +126,21 @@ const updateAppearance = () => {
   if (!model) return;
   const core = model.internalModel.coreModel;
 
-  // 服装
-  Object.entries(MAPPINGS.outfits).forEach(([pName, pId]) => {
-    // もしIDが間違っていても止まらないようにチェックを入れる
-    if (core.getParameterIndex(pId) !== -1) {
-      const val = (pName === props.personality) ? 1 : 0;
-      core.setParameterValueById(pId, val);
-    }
+  // 1. 服装切り替え
+  const outfitMap = MAPPINGS.outfits;
+  Object.entries(outfitMap).forEach(([personalityName, paramId]) => {
+    // 現在の性格なら1、それ以外は0
+    const val = (personalityName === props.personality) ? 1 : 0;
+    core.setParameterValueById(paramId, val);
   });
 
-  // 髪型・目
+  // 2. 髪型・目の切り替え
   const setParamGroup = (categoryName, selectedValue) => {
     const map = MAPPINGS.params[categoryName];
     if (!map) return;
     Object.entries(map).forEach(([optionName, paramId]) => {
-       if (core.getParameterIndex(paramId) !== -1) {
-          const value = (optionName === selectedValue) ? 1 : 0;
-          core.setParameterValueById(paramId, value);
-       }
+      const value = (optionName === selectedValue) ? 1 : 0;
+      core.setParameterValueById(paramId, value);
     });
   };
 
@@ -138,33 +148,66 @@ const updateAppearance = () => {
   setParamGroup('backHairstyle', props.backHairstyle);
   setParamGroup('eyes', props.eyes);
   
-  model.internalModel.update();
+  core.update();
 };
 
-// ■ モーション再生
+// ■ モーション再生（ここを修正！）
 const playMotionByState = () => {
   if (!model) return;
-  const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系'];
   
-  let groupName = motionSet.idle;
+  // マッピングから、性格に応じた「モーション名セット」を取得
+  const motionSet = MAPPINGS.motions[props.personality];
+  
+  // もし定義が見つからなければデフォルト（元気系）へ
+  const targetSet = motionSet || MAPPINGS.motions['元気系'];
+
+  let groupName = targetSet.idle; // デフォルトは待機モーション
+  let priority = 1;
+
+  // 感情がcelebrateなら成功モーションへ
   if (props.emotion === 'celebrate') {
-    groupName = motionSet.success;
+    groupName = targetSet.success;
+    priority = 3; 
   }
 
   try {
-    model.motion(groupName, 0, 1);
+    // 指定したグループ名を再生
+    console.log(`Playing Motion: ${groupName}`); // デバッグ用ログ
+    model.motion(groupName, 0, priority);
   } catch (e) {
-    console.warn(`Motion error: ${groupName}`, e);
+    console.warn('Motion play failed:', e);
   }
 };
 
-watch(() => [props.frontHairstyle, props.backHairstyle, props.eyes, props.personality], () => updateAppearance());
-watch(() => [props.personality, props.emotion], () => playMotionByState());
+watch(
+  () => [props.frontHairstyle, props.backHairstyle, props.eyes, props.personality], 
+  () => updateAppearance()
+);
+
+watch(
+  () => [props.personality, props.emotion], 
+  () => playMotionByState()
+);
 
 const onResize = () => {
   if (!app || !model) return;
   app.resize();
   model.x = app.screen.width / 2;
-  model.y = app.screen.height / 2; // 中心配置
+  model.y = app.screen.height;
 };
 </script>
+
+<style scoped>
+.live2d-canvas-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none; 
+}
+canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>
