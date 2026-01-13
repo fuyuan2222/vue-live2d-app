@@ -76,6 +76,8 @@ const MAPPINGS = {
   初期化
 ===================== */
 onMounted(async () => {
+  window.live2d = model//デバッグ用
+  
   if (!canvasRef.value) return
 
   app = new PIXI.Application({
