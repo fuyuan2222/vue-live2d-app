@@ -15,10 +15,15 @@
       <AllTasksView v-else-if="activeTab === 'all-tasks'" />
       <CharacterView
         v-else-if="activeTab === 'character'"
+        :personality="characterPersonality"
+        :front-hairstyle="characterFrontHairstyle"
+        :back-hairstyle="characterBackHairstyle"
+        :eyes="characterEyes"
         :startup-line="startupLineText"
         :show-startup-line="showStartupLine"
         @finish-startup-line="showStartupLine = false"
-      />
+        />
+
       <CategoriesView v-else-if="activeTab === 'categories'" />
       <NotificationsView v-else-if="activeTab === 'notifications'" />
     </main>
