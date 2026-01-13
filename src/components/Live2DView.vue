@@ -51,7 +51,7 @@ const MAPPINGS = {
   // 髪型・目
   params: {
     frontHairstyle: {
-      'ぱっつん': 'ParamFrontHait_pattun',
+      'ぱっつん': 'ParamFrontHair_pattun',
       '３つ分け': 'ParamFrontHair_Three',
       '２・８分け': 'ParamFrontHair_TowEight'
     },
