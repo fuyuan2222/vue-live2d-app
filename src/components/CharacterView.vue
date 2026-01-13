@@ -1,6 +1,7 @@
 <template>
   <section class="character-customization">
     <h2>キャラクター設定</h2>
+    
     <div class="live2d-preview-container">
       <Live2DModel
         :emotion="getEmotion"
@@ -9,7 +10,8 @@
         :back-hairstyle="characterBackHairstyle"
         :eyes="characterEyes" 
       />
-      </div>
+    </div>
+
     <div class="customization-options">
       <div class="option-group">
         <h3>性格</h3>
@@ -23,9 +25,9 @@
       <div class="option-group">
         <h3>後ろ髪</h3>
         <select v-model="characterBackHairstyle">
+          <option value="サイドテール">サイドテール</option>
           <option value="一つ結び">一つ結び</option>
           <option value="ショート">ショート</option>
-          <option value="サイドテール">サイドテール</option>
         </select>
       </div>
 
@@ -54,21 +56,19 @@
 import { inject, computed } from 'vue'
 import Live2DModel from './Live2DView.vue'
 
-// ここで inject しているデータがリアクティブ（ref）であることを前提とします
+// App.vue から提供されたデータを受け取る
 const {
   characterPersonality,
   characterFrontHairstyle,
   characterBackHairstyle,
   characterEyes
-  // もし outfit や accessory も使うならここに追加し、親で provide する必要があります
 } = inject('character-data');
 
 const { tasks } = inject('task-data');
 
+// タスク状況に応じて表情を変えるロジック
 const getEmotion = computed(() => {
-  // tasks が undefined の場合のガードを入れるとより安全です
   if (!tasks || !tasks.value) return 'idle'; 
-  
   const completed = tasks.value.filter(t => t.done).length
   if (tasks.value.length === 0) return 'idle'
   if (completed === tasks.value.length) return 'celebrate'
@@ -81,21 +81,13 @@ const getEmotion = computed(() => {
 .character-customization {
   display: flex;
   flex-direction: column;
-  /* 画面の高さいっぱいを使う */
   height: 100%;
-  
-  /* ★重要：メニューバーに被らないように下に余白をたっぷり入れる */
   padding-bottom: 120px; 
-  
-  /* 画面が小さくて入り切らない場合はスクロールさせる */
   overflow-y: auto; 
   box-sizing: border-box;
-  
-  /* 余白調整 */
   padding-top: 20px;
   padding-left: 20px;
   padding-right: 20px;
-
 }
 
 h2 {
@@ -109,27 +101,20 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  
-  /* 画面の余ったスペースを使うが、設定項目を圧迫しすぎないようにする */
   flex-grow: 1;
-  min-height: 200px; /* 最低限の高さを確保 */
-  
+  min-height: 200px;
   position: relative;
-  /* Live2Dがはみ出しても表示崩れしないように */
   overflow: visible; 
   margin-bottom: 20px;
 }
 
 .customization-options {
   display: grid;
-  /* スマホ、PC共に2列で表示 */
   grid-template-columns: repeat(2, 1fr);
   gap: 15px;
-  
-  /* フォーム周りが狭くならないように */
   width: 100%;
   max-width: 600px;
-  margin: 0 auto; /* 中央寄せ */
+  margin: 0 auto;
 }
 
 .option-group h3 {
@@ -143,14 +128,12 @@ h2 {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 12px; /* 角丸を強めにして今のUIに合わせる */
+  border-radius: 12px;
   background-color: #f9f9f9;
-  font-size: 16px; /* スマホでズームされないサイズ */
+  font-size: 16px;
   color: #333;
   outline: none;
   box-sizing: border-box;
-  
-  /* オレンジのテーマカラーに合わせるなら */
   border-left: 4px solid #FFB74D;
 }
 
@@ -159,22 +142,15 @@ h2 {
   border-color: #FF9800;
 }
 
-/* PC版（768px以上）のスタイル調整 */
 @media (min-width: 768px) {
   .live2d-preview-container {
-    height: 400px; /* 固定高さにして安定させる */
+    height: 400px;
     flex-grow: 0;
     margin-bottom: 30px;
   }
   .customization-options {
     gap: 30px;
-    grid-template-columns: repeat(4, 1fr); /* 横一列にするなど */
-  }
-  .option-group h3 {
-    font-size: 16px;
-  }
-  .option-group select {
-    font-size: 16px;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 </style>
