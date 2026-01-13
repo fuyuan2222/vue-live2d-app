@@ -7,39 +7,34 @@
 		],
 		"DisplayInfo": "study.cdi3.json",
 		"Motions": {
+			"Cheer_Cool": [
+				{
+					"File": "Cheer_Cool.motion3.json"
+				}
+			],
 			"Cheer_Genki": [
 				{
 					"File": "Cheer_Genki.motion3.json"
 				}
 			],
-			"Idle_Genki": [
-				{
-					"File": "ParamBreath_Genki.motion3.json"
-				}
-			],
-			"Success_Genki": [
-				{
-					"File": "Success_Genki.motion3.json"
-				}
-			],
-			"Cheer_Iyashi": [
+			"Cheer_Heal": [
 				{
 					"File": "Cheer_Heal.motion3.json"
 				}
 			],
-			"Idle_Iyashi": [
+			"Idle_Cool": [
+				{
+					"File": "ParamBreath_Cool.motion3.json"
+				}
+			],
+			"Idle_genki": [
+				{
+					"File": "ParamBreath_Genki.motion3.json"
+				}
+			],
+			"Idle_Heal": [
 				{
 					"File": "ParamBreath_Heal.motion3.json"
-				}
-			],
-			"Success_Iyashi": [
-				{
-					"File": "Success_Heal.motion3.json"
-				}
-			],
-			"Cheer_Cool": [
-				{
-					"File": "Cheer_Cool.motion3.json"
 				}
 			],
 			"Success_Cool": [
@@ -47,9 +42,14 @@
 					"File": "Success_Cool.motion3.json"
 				}
 			],
-			"Idle_Cool": [
+			"Success_Genki": [
 				{
-					"File": "ParamBreath_Cool.motion3.json"
+					"File": "Success_Genki.motion3.json"
+				}
+			],
+			"Success_Heal": [
+				{
+					"File": "Success_Heal.motion3.json"
 				}
 			]
 		}
