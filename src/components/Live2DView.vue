@@ -64,12 +64,13 @@ const MAPPINGS = {
       'ショート': 'ParamBackHair_Short'
     },
     eyes: {
-      '丸目': 'ParamEyeType_Round',
-      'たれ目': 'ParamEyeType_Droop',
-      '釣り目': 'ParamEyeType_Sharp'
+      '丸目': 'ParamEyeStyle_Round',
+      'たれ目': 'ParamEye_Droop',
+      '釣り目': 'ParamEye_Sharp'
     }
   }
 }
+
 
 /* =====================
   初期化
@@ -140,12 +141,11 @@ const updateAppearance = () => {
     )
   })
 
-  /* 髪型・目 */
-  const setParamGroup = (group, value) => {
+  /* 前髪・後ろ髪・目（排他的ON/OFF） */
+  const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
-    if (!map) return
     Object.entries(map).forEach(([name, id]) => {
-      core.setParameterValueById(id, name === value ? 1 : 0)
+      core.setParameterValueById(id, name === selected ? 1 : 0)
     })
   }
 
