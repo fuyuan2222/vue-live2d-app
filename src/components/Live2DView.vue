@@ -75,7 +75,7 @@ const MAPPINGS = {
 /* =====================
   初期化
 ===================== */
-onMounted(async () => {onMounted(async () => {
+onMounted(async () => {
   if (!canvasRef.value) return
 
   app = new PIXI.Application({
@@ -87,7 +87,7 @@ onMounted(async () => {onMounted(async () => {
     antialias: true
   })
 
-  /* interaction クラッシュ回避 */
+  /* interaction 周りのクラッシュ回避 */
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -115,9 +115,8 @@ onMounted(async () => {onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // ★★★ ここを修正 ★★★
-  // モーションの計算が終わった直後に、強制的にカスタム値を上書きする
-  model.on('update', () => {
+  // 毎フレーム見た目を更新（モーション上書き対策）
+  app.ticker.add(() => {
     updateAppearance()
   })
 
@@ -125,54 +124,10 @@ onMounted(async () => {onMounted(async () => {
 
   window.addEventListener('resize', onResize)
 })
-  if (!canvasRef.value) return
 
-  app = new PIXI.Application({
-    view: canvasRef.value,
-    resizeTo: canvasRef.value.parentElement,
-    backgroundAlpha: 0,
-    autoDensity: true,
-    resolution: window.devicePixelRatio || 1,
-    antialias: true
-  })
-
-  /* interaction クラッシュ回避 */
-  if (app.renderer.events) {
-    app.renderer.events.destroy()
-    delete app.renderer.events
-  }
-  if (app.renderer.plugins?.interaction) {
-    app.renderer.plugins.interaction.destroy()
-    delete app.renderer.plugins.interaction
-  }
-
-  model = await Live2DModel.from(
-    '/live2d/study/study.model3.json',
-    { autoInteract: false }
-  )
-
-  model.anchor.set(0.5, 1)
-  model.x = app.screen.width / 2
-  model.y = app.screen.height
-
-  const scale =
-    Math.min(
-      app.screen.width / model.width,
-      app.screen.height / model.height
-    ) * 1.6
-
-  model.scale.set(scale)
-  app.stage.addChild(model)
-
-  // ★★★ ここを修正 ★★★
-  // モーションの計算が終わった直後に、強制的にカスタム値を上書きする
-  model.on('update', () => {
-    updateAppearance()
-  })
-
-  playMotionByState()
-
-  window.addEventListener('resize', onResize)
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  if (app) app.destroy(true, { children: true })
 })
 
 /* =====================
