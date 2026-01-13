@@ -9,15 +9,11 @@ import { defineProps, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as PIXI from 'pixi.js'
 import { Live2DModel } from 'pixi-live2d-display/cubism4'
 
-/* pixi-live2d-display 用 */
 window.PIXI = PIXI
 
-/* =====================
-  props
-===================== */
 const props = defineProps({
-  emotion: { type: String, default: 'idle' },        
-  personality: { type: String, default: '元気系' }, 
+  emotion: { type: String, default: 'idle' },
+  personality: { type: String, default: '元気系' },
   frontHairstyle: { type: String, default: 'ぱっつん' },
   backHairstyle: { type: String, default: 'サイドテール' },
   eyes: { type: String, default: '丸目' }
@@ -27,32 +23,18 @@ const canvasRef = ref(null)
 let app = null
 let model = null
 
-/* =====================
-  マッピング定義
-  ★ご指定の正しいIDに更新済み
-===================== */
+// ★ ID定義（ここはあなたの環境の正しいIDのままにしています）
 const MAPPINGS = {
   motions: {
-    '元気系': {
-      idle: 'Idle_Genki',
-      success: 'Success_Genki'
-    },
-    '癒し系': {
-      idle: 'Idle_Heal',
-      success: 'Success_Heal'
-    },
-    'クール系': {
-      idle: 'Idle_Cool',
-      success: 'Success_Cool'
-    }
+    '元気系': { idle: 'Idle_Genki', success: 'Success_Genki' },
+    '癒し系': { idle: 'Idle_Heal', success: 'Success_Heal' },
+    'クール系': { idle: 'Idle_Cool', success: 'Success_Cool' }
   },
-
   outfits: {
     '元気系': 'Outfit_Power',
     '癒し系': 'Outfit_Heal',
     'クール系': 'Outfit_Cool'
   },
-
   params: {
     frontHairstyle: {
       'ぱっつん': 'ParamFrontHair_Pattun',
@@ -72,10 +54,6 @@ const MAPPINGS = {
   }
 }
 
-
-/* =====================
-  初期化
-===================== */
 onMounted(async () => {
   if (!canvasRef.value) return
 
@@ -88,71 +66,57 @@ onMounted(async () => {
     antialias: true
   })
 
-  /* interaction クラッシュ回避 */
-  if (app.renderer.events) {
-    app.renderer.events.destroy()
-    delete app.renderer.events
-  }
-  if (app.renderer.plugins?.interaction) {
-    app.renderer.plugins.interaction.destroy()
-    delete app.renderer.plugins.interaction
-  }
-
-  model = await Live2DModel.from(
-    '/live2d/study/study.model3.json',
-    { autoInteract: false }
-  )
+  // モデル読み込み
+  model = await Live2DModel.from('/live2d/study/study.model3.json', {
+    autoInteract: false,
+    // ★重要：ポーズ機能を無効化（勝手なパーツ切り替えを防ぐ）
+    loadPose: false
+  })
 
   model.anchor.set(0.5, 1)
   model.x = app.screen.width / 2
   model.y = app.screen.height
-
-  const scale =
-    Math.min(
-      app.screen.width / model.width,
-      app.screen.height / model.height
-    ) * 1.6
-
+  
+  const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.6
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // ★★★ 修正箇所：優先度 UTILITY を追加 ★★★
-  // これにより、Live2Dのモーション更新処理が終わった「後」に
-  // updateAppearance が実行されるため、確実にカスタム設定で上書きされます。
+  // ★重要：モーション計算後に強制上書き（優先度 UTILITY）
   app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
 
+  // 最初のモーション再生
   playMotionByState()
 
   window.addEventListener('resize', onResize)
 })
-/* =====================
-  見た目切り替え
-  （デバッグコード削除済み・毎フレーム実行）
-===================== */
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  if (app) app.destroy(true, { children: true })
+})
+
+// ■■■ 修正ポイント1：パラメータとパーツの両方を叩く ■■■
 const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
-  // パラメータとパーツの両方を強制的に書き換えるヘルパー関数
+  // ヘルパー関数：パラメータとパーツ不透明度の両方に値をセットする
+  // これでIDがどっちであっても確実に反応する
   const setBoth = (id, value) => {
-    // 1. パラメータとして設定してみる (変形など)
-    core.setParameterValueById(id, value)
-    // 2. パーツとして設定してみる (表示・非表示)
-    core.setPartOpacityById(id, value)
+    core.setParameterValueById(id, value) // パラメータ用
+    core.setPartOpacityById(id, value)    // パーツ用
   }
 
-  /* 服装 */
+  // 服装
   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-    const val = (key === props.personality) ? 1 : 0
-    setBoth(paramId, val)
+    setBoth(paramId, key === props.personality ? 1 : 0)
   })
 
-  /* 前髪・後ろ髪・目 */
+  // 髪・目
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
     Object.entries(map).forEach(([name, id]) => {
-      const val = (name === selected) ? 1 : 0
-      setBoth(id, val)
+      setBoth(id, name === selected ? 1 : 0)
     })
   }
 
@@ -161,53 +125,44 @@ const updateAppearance = () => {
   setParamGroup('eyes', props.eyes)
 }
 
-/* =====================
-  モーション再生（ループ対応版）
-===================== */
+// ■■■ 修正ポイント2：確実にループさせるロジック ■■■
 const playMotionByState = async () => {
   if (!model) return
 
-  // 現在の設定から再生すべきモーション名を決定
   const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
   let groupName = motionSet.idle
-  let priority = 1
-  let isIdle = true // アイドルモーションかどうか
+  let priority = 1 // 待機は低優先度
+  let isIdle = true
 
   if (props.emotion === 'celebrate') {
     groupName = motionSet.success
-    priority = 3
+    priority = 3 // 成功は高優先度（強制再生）
     isIdle = false
   }
 
-  // 再生開始
-  const finished = await model.motion(groupName, 0, { priority })
+  // 再生実行
+  const result = await model.motion(groupName, 0, { priority })
 
-  // ループ処理：再生が正常終了し、かつアイドル状態であるべきなら再帰呼び出し
-  if (finished && isIdle) {
-    const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
-    
-    // 設定が変わっていなければループ再生
-    if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
+  // ループ判定
+  // resultがtrueなら正常終了。falseなら何かに割り込まれたか失敗。
+  if (result === true && isIdle) {
+    // まだ設定が変わっていなければ、再度自分自身を呼んでループする
+    const currentSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
+    if (groupName === currentSet.idle && props.emotion !== 'celebrate') {
       playMotionByState()
     }
   }
 }
 
-/* =====================
-  watch
-===================== */
+// 監視
 watch(
   () => [props.personality, props.emotion],
   () => {
-    // 設定が変わったら即座に新しいモーションを再生
+    // 設定が変わったら即座に新しいモーションを再生（今のループはキャンセルされる）
     playMotionByState()
-  },
-  { immediate: true }
+  }
 )
 
-/* =====================
-  resize
-===================== */
 const onResize = () => {
   if (!app || !model) return
   app.resize()
@@ -225,7 +180,6 @@ const onResize = () => {
   align-items: flex-end;
   pointer-events: none;
 }
-
 canvas {
   width: 100%;
   height: 100%;
