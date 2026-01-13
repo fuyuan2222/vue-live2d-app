@@ -65,27 +65,28 @@ const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
-  const part = (id, on) => core.setPartOpacityById(id, on ? 1 : 0)
+  const param = (id, on) =>
+    core.setParameterValueById(id, on ? 1 : 0, 1.0)
 
-  // 服
-  part('Outfit_Power', props.personality === '元気系')
-  part('Outfit_Heal', props.personality === '癒し系')
-  part('Outfit_Cool', props.personality === 'クール系')
+  /* 服（性格連動） */
+  param('Outfit_Power', props.personality === '元気系')
+  param('Outfit_Heal', props.personality === '癒し系')
+  param('Outfit_Cool', props.personality === 'クール系')
 
-  // 前髪
-  part('ParamFrontHair_Pattun', props.frontHairstyle === 'ぱっつん')
-  part('ParamFrontHair_Three', props.frontHairstyle === '３つ分け')
-  part('ParamFrontHair_TwoEight', props.frontHairstyle === '２・８分け')
+  /* 前髪 */
+  param('ParamFrontHair_Pattsun', props.frontHairstyle === 'ぱっつん')
+  param('ParamFrontHair_Three', props.frontHairstyle === '３つ分け')
+  param('ParamFrontHair_TwoEight', props.frontHairstyle === '２・８分け')
 
-  // 後ろ髪
-  part('ParamBackHair_Side', props.backHairstyle === 'サイドテール')
-  part('ParamBackHair_One', props.backHairstyle === '一つ結び')
-  part('ParamBackHair_Short', props.backHairstyle === 'ショート')
+  /* 後ろ髪 */
+  param('ParamBackHair_Side', props.backHairstyle === 'サイドテール')
+  param('ParamBackHair_One', props.backHairstyle === '一つ結び')
+  param('ParamBackHair_Short', props.backHairstyle === 'ショート')
 
-  // 目
-  part('ParamEyeStyle_Round', props.eyes === '丸目')
-  part('ParamEye_Droop', props.eyes === 'たれ目')
-  part('ParamEye_Sharp', props.eyes === '釣り目')
+  /* 目 */
+  param('ParamEyeStyle_Round', props.eyes === '丸目')
+  param('ParamEye_Droop', props.eyes === 'たれ目')
+  param('ParamEye_Sharp', props.eyes === '釣り目')
 }
 
 /* モーション制御 */
