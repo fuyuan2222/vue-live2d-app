@@ -35,7 +35,10 @@ const notifications = ref([])
 // --- キャラクター設定  ---
 const characterPersonality = ref('元気系')
 const characterFrontHairstyle = ref('ぱっつん') 
-const characterBackHairstyle = ref('ロング')    
+
+// ★ここ修正：「ロング」はもう存在しないので「サイドテール」に変更
+const characterBackHairstyle = ref('サイドテール')    
+
 const characterEyes = ref('丸目')             
 const characterOutfit = ref('元気カジュアル系')
 const characterAccessory = ref('なし')
@@ -162,8 +165,13 @@ onMounted(() => {
         characterOutfit.value = charData.outfit || '元気カジュアル系'
         characterAccessory.value = charData.accessory || 'なし'
         
-        // 旧データ(hairstyle)がある場合は後ろ髪に適用し、前髪はデフォルトにする等の移行処理
-        characterBackHairstyle.value = charData.backHairstyle || charData.hairstyle || 'ロング'
+        // ★ここ修正：
+        // 旧データ(hairstyle)がある場合の移行処理も、新しい名前に合わせる
+        // もし古いデータで「ロング」が保存されていても、「一つ結び」か「サイドテール」になるようにする
+        let backHair = charData.backHairstyle || charData.hairstyle || 'サイドテール';
+        if (backHair === 'ロング') backHair = '一つ結び'; // 古いデータ対策
+        characterBackHairstyle.value = backHair;
+
         characterFrontHairstyle.value = charData.frontHairstyle || 'ぱっつん'
         characterEyes.value = charData.eyes || '丸目'
     }
