@@ -1,5 +1,15 @@
 <template>
   <section class="character-customization">
+    <h2>キャラクター設定</h2>
+    <div class="live2d-preview-container">
+      <Live2DModel
+        :emotion="getEmotion"
+        :personality="characterPersonality"
+        :front-hairstyle="characterFrontHairstyle"
+        :back-hairstyle="characterBackHairstyle"
+        :eyes="characterEyes" 
+      />
+      </div>
     <div class="customization-options">
       <div class="option-group">
         <h3>性格</h3>
