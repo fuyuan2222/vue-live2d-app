@@ -27,6 +27,10 @@
     <div class="char-pane pane" @click="setFocus('char')">
       <Live2DView 
         :emotion="getEmotion"
+        :personality="characterPersonality"
+        :front-hairstyle="characterFrontHairstyle"
+        :back-hairstyle="characterBackHairstyle"
+        :eyes="characterEyes"
         class="live2d-model"
       />
       
@@ -44,16 +48,27 @@ import Live2DView from './Live2DView.vue'
 
 /* inject */
 const { tasks, removeTask } = inject('task-data')
-const { characterPersonality } = inject('character-data')
+// ★ここ修正：性格以外に、髪型や目のデータも受け取る
+const { 
+  characterPersonality,
+  characterFrontHairstyle,
+  characterBackHairstyle,
+  characterEyes
+} = inject('character-data')
 
 /* state */
 const showCompleteEffect = ref(false)
 
+// ★ここ修正：消えていた変数を復活させました！これがないと動きません！
+const currentFocus = ref('neutral') 
+const setFocus = (target) => {
+  currentFocus.value = target
+}
 
 /* 今日のタスク */
 const filteredTodayTasks = computed(() => {
   const today = new Date().toISOString().slice(0, 10)
-  return tasks.value.filter(t => t.dueDate === today)
+  return tasks.value ? tasks.value.filter(t => t.dueDate === today) : []
 })
 
 /* 性格キー変換 */
@@ -93,7 +108,7 @@ const completeMessageMap = {
 
 /* 残タスク数 */
 const leftCount = computed(() =>
-  tasks.value.filter(t => !t.done).length
+  tasks.value ? tasks.value.filter(t => !t.done).length : 0
 )
 
 /* 表示メッセージ */
@@ -112,6 +127,7 @@ const displayMessage = computed(() => {
 
 /* Live2D感情 */
 const getEmotion = computed(() => {
+  if (!tasks.value) return 'idle'
   if (showCompleteEffect.value) return 'celebrate'
   if (tasks.value.length === 0) return 'idle'
   if (leftCount.value === 0) return 'celebrate'
@@ -121,7 +137,7 @@ const getEmotion = computed(() => {
 
 /* 全完了演出 */
 watch(
-  () => tasks.value.map(t => t.done),
+  () => tasks.value ? tasks.value.map(t => t.done) : [],
   (newVal, oldVal) => {
     const wasAllDone = oldVal?.length && oldVal.every(v => v)
     const isAllDone = newVal.length && newVal.every(v => v)
@@ -151,7 +167,6 @@ watch(
 .pane {
   flex: 1; /* 基本は1:1 */
   position: relative;
-  /* overflow: hidden; を削除。キャラの手などが切れるのを防ぐ */
   transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;

@@ -70,7 +70,6 @@ onMounted(async () => {
   });
 
   // モデル読み込み
-  // ※パスが正しいか確認してください
   model = await Live2DModel.from('/live2d/study/study.model3.json', {
     autoInteract: false
   });
