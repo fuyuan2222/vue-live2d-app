@@ -16,8 +16,8 @@ window.PIXI = PIXI
   props
 ===================== */
 const props = defineProps({
-  emotion: { type: String, default: 'idle' },        // idle | celebrate | smile
-  personality: { type: String, default: '元気系' }, // 元気系 | 癒し系 | クール系
+  emotion: { type: String, default: 'idle' },        
+  personality: { type: String, default: '元気系' }, 
   frontHairstyle: { type: String, default: 'ぱっつん' },
   backHairstyle: { type: String, default: 'サイドテール' },
   eyes: { type: String, default: '丸目' }
