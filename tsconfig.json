@@ -17,8 +17,7 @@
     "skipLibCheck": true,
     
     "allowJs": true,
-
-    /* 修正2: これがないと「入力ファイルを上書きしてしまう」というエラーが出ます */
+    
     "noEmit": true,
 
     "baseUrl": ".",

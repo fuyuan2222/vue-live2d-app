@@ -18,7 +18,7 @@ const props = defineProps({
   personality: { type: String, default: '元気系' },
   // カスタマイズ項目
   frontHairstyle: { type: String, default: 'ぱっつん' },
-  backHairstyle: { type: String, default: 'ロング' },
+  backHairstyle: { type: String, default: 'サイドテール' },
   eyes: { type: String, default: '丸目' }
 });
 
@@ -27,7 +27,6 @@ let app = null;
 let model = null;
 
 // ■ 設定：IDマッピング表
-// ★重要★ ここをご自身のLive2DパラメータIDに合わせて書き換えてください！
 const MAPPINGS = {
   // 性格の変換表 (日本語 -> 英語サフィックス)
   personality: {
