@@ -72,6 +72,7 @@ const MAPPINGS = {
   }
 }
 
+
 /* =====================
   初期化
 ===================== */
@@ -87,7 +88,7 @@ onMounted(async () => {
     antialias: true
   })
 
-  /* interaction 周りのクラッシュ回避 */
+  /* interaction クラッシュ回避 */
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -115,21 +116,15 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // 毎フレーム見た目を更新（モーション上書き対策）
-  app.ticker.add(() => {
-    updateAppearance()
-  })
+  // ★★★ 修正箇所：優先度 UTILITY を追加 ★★★
+  // これにより、Live2Dのモーション更新処理が終わった「後」に
+  // updateAppearance が実行されるため、確実にカスタム設定で上書きされます。
+  app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
 
   playMotionByState()
 
   window.addEventListener('resize', onResize)
 })
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize)
-  if (app) app.destroy(true, { children: true })
-})
-
 /* =====================
   見た目切り替え
   （デバッグコード削除済み・毎フレーム実行）
