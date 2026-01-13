@@ -2,62 +2,62 @@
 	"Version": 3,
 	"Parameters": [
 		{
-			"Id": "Param25",
-			"GroupId": "ParamGroup3",
-			"Name": "ParamFrontHair_Pattsun"
-		},
-		{
-			"Id": "Param26",
+			"Id": "ParamFrontHair_Three",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamFrontHair_Three"
 		},
 		{
-			"Id": "Param27",
+			"Id": "ParamFrontHair_Pattsun",
+			"GroupId": "ParamGroup3",
+			"Name": "ParamFrontHair_Pattsun"
+		},
+		{
+			"Id": "ParamFrontHair_TwoEight",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamFrontHair_TwoEight"
 		},
 		{
-			"Id": "Param13",
+			"Id": "ParamBackHair_Side",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamBackHair_Side"
 		},
 		{
-			"Id": "Param28",
+			"Id": "ParamBackHair_Short",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamBackHair_Short"
 		},
 		{
-			"Id": "Param29",
+			"Id": "ParamBackHair_One",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamBackHair_One"
 		},
 		{
-			"Id": "Param14",
+			"Id": "ParamEyeStyle_Round",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamEyeStyle_Round"
 		},
 		{
-			"Id": "Param30",
+			"Id": "ParamEye_Sharp",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamEye_Sharp"
 		},
 		{
-			"Id": "Param31",
+			"Id": "ParamEye_Droop",
 			"GroupId": "ParamGroup3",
 			"Name": "ParamEye_Droop"
 		},
 		{
-			"Id": "Param3",
+			"Id": "Outfit_Power",
 			"GroupId": "ParamGroup3",
 			"Name": "Outfit_Power"
 		},
 		{
-			"Id": "Param4",
+			"Id": "Outfit_Cool",
 			"GroupId": "ParamGroup3",
 			"Name": "Outfit_Cool"
 		},
 		{
-			"Id": "Param15",
+			"Id": "Outfit_Heal",
 			"GroupId": "ParamGroup3",
 			"Name": "Outfit_Heal"
 		},
