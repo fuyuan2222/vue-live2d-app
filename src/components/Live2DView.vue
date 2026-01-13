@@ -133,19 +133,26 @@ const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
+  // パラメータとパーツの両方を強制的に書き換えるヘルパー関数
+  const setBoth = (id, value) => {
+    // 1. パラメータとして設定してみる (変形など)
+    core.setParameterValueById(id, value)
+    // 2. パーツとして設定してみる (表示・非表示)
+    core.setPartOpacityById(id, value)
+  }
+
   /* 服装 */
   Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-    core.setParameterValueById(
-      paramId,
-      key === props.personality ? 1 : 0
-    )
+    const val = (key === props.personality) ? 1 : 0
+    setBoth(paramId, val)
   })
 
   /* 前髪・後ろ髪・目 */
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
     Object.entries(map).forEach(([name, id]) => {
-      core.setParameterValueById(id, name === selected ? 1 : 0)
+      const val = (name === selected) ? 1 : 0
+      setBoth(id, val)
     })
   }
 
