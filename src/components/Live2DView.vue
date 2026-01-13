@@ -8,7 +8,7 @@
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import * as PIXI from 'pixi.js';
 
-// props定義
+// ★重要：props定義
 const props = defineProps({
   emotion: { type: String, default: 'idle' },
   personality: { type: String, default: '元気系' },
@@ -21,7 +21,7 @@ const canvasRef = ref(null);
 let app = null;
 let model = null;
 
-// IDマッピング表
+// ■■■ IDマッピング表（ご自身のモデルIDに合わせてください） ■■■
 const MAPPINGS = {
   motions: {
     '元気系': { idle: 'Idle_Genki', success: 'Success_Genki' },
@@ -55,53 +55,47 @@ const MAPPINGS = {
 onMounted(async () => {
   if (!canvasRef.value) return;
 
+  // ★修正1：PIXIを確実にウィンドウに登録してからライブラリを読み込む
   window.PIXI = PIXI;
-  // Dynamic import
+  
+  // ★修正2：読み込み順序バグを防ぐため、ここで動的にインポートする
   const { Live2DModel } = await import('pixi-live2d-display/cubism4');
 
   app = new PIXI.Application({
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
-    backgroundAlpha: 0.5, // 確認用にグレー背景
+    backgroundAlpha: 0, // ★もし画面が真っ白なら、ここを 0.5 にしてグレーが出るか確認してください
     autoStart: true,
+    resolution: window.devicePixelRatio || 2,
+    autoDensity: true,
+    antialias: true
   });
 
+  // モデル読み込み
+  // ★重要：このパスにファイルが本当にありますか？ブラウザの開発者ツール(F12)のNetworkタブで404になっていないか確認を！
   try {
-    model = await Live2DModel.from('/live2d/study/study.model3.json', { autoInteract: false });
+    model = await Live2DModel.from('/live2d/study/study.model3.json', {
+      autoInteract: false
+    });
 
-    // ■■■ 診断モード：画面中央に強制配置 ■■■
-    model.anchor.set(0.5, 0.5);
+    // 位置・サイズ調整
+    model.anchor.set(0.5, 1.0);
     model.x = app.screen.width / 2;
-    model.y = app.screen.height / 2;
+    model.y = app.screen.height;
     
-    // 0.8倍で全体表示を狙う
-    const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 0.8;
+    // 画面サイズに合わせてスケール調整
+    const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.8;
     model.scale.set(scale);
 
     app.stage.addChild(model);
-    console.log("Model loaded successfully!");
 
-    // ■■■ ID確認ログ出力 ■■■
-    const core = model.internalModel.coreModel;
+    // 初期反映
+    updateAppearance();
+    playMotionByState();
     
-    console.warn("▼▼▼ パラメータID一覧 ▼▼▼");
-    const paramCount = core.getParameterCount();
-    for (let i = 0; i < paramCount; i++) {
-        console.log(`ID: ${core.getParameterId(i)} | Val: ${core.getParameterValueByIndex(i)}`);
-    }
-
-    console.warn("▼▼▼ パーツID一覧 ▼▼▼");
-    const partCount = core.getPartCount();
-    for (let i = 0; i < partCount; i++) {
-        console.log(`ID: ${core.getPartId(i)} | Opacity: ${core.getPartOpacityByIndex(i)}`);
-    }
-
-    // ★着せ替えロジックは今は止めておく（原因特定のため）
-    // updateAppearance(); 
-    // playMotionByState();
-
+    console.log("Model loaded successfully!"); // 成功ログ
   } catch (e) {
-    console.error("Load failed:", e);
+    console.error("Model loading failed:", e);
   }
 
   window.addEventListener('resize', onResize);
@@ -114,15 +108,16 @@ onBeforeUnmount(() => {
   }
 });
 
-// ロジック関数定義（呼んではないけど置いておく）
+// ■ 着せ替えロジック
 const updateAppearance = () => {
   if (!model) return;
   const core = model.internalModel.coreModel;
-  
+
   // 服装
   Object.entries(MAPPINGS.outfits).forEach(([pName, pId]) => {
     core.setParameterValueById(pId, (pName === props.personality) ? 1 : 0);
   });
+
   // 髪・目
   const setParam = (cat, val) => {
     const map = MAPPINGS.params[cat];
@@ -138,13 +133,18 @@ const updateAppearance = () => {
   model.internalModel.update();
 };
 
+// ■ モーション再生
 const playMotionByState = () => {
   if (!model) return;
   const set = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系'];
   const motion = (props.emotion === 'celebrate') ? set.success : set.idle;
+  
   try {
+    // 優先度3で強制再生
     model.motion(motion, 0, 3);
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Motion error:', e);
+  }
 };
 
 watch(() => [props.frontHairstyle, props.backHairstyle, props.eyes, props.personality], () => updateAppearance());
@@ -154,7 +154,7 @@ const onResize = () => {
   if (!app || !model) return;
   app.resize();
   model.x = app.screen.width / 2;
-  model.y = app.screen.height / 2; // 診断モードなので中央配置
+  model.y = app.screen.height;
 };
 </script>
 
@@ -162,11 +162,13 @@ const onResize = () => {
 .live2d-canvas-container {
   width: 100%;
   height: 100%;
+  /* ちゃんと親要素いっぱいに広がるように指定 */
   display: flex;
   justify-content: center;
   align-items: flex-end;
 }
 canvas {
+  /* キャンバス自体のサイズも保証 */
   width: 100%;
   height: 100%;
 }
