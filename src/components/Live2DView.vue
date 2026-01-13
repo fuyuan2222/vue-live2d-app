@@ -9,10 +9,11 @@ import { defineProps, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as PIXI from 'pixi.js'
 import { Live2DModel } from 'pixi-live2d-display/cubism4'
 
+/* pixi-live2d-display 用 */
 window.PIXI = PIXI
 
 /* =====================
-   props
+  props
 ===================== */
 const props = defineProps({
   emotion: { type: String, default: 'idle' },        
@@ -25,10 +26,11 @@ const props = defineProps({
 const canvasRef = ref(null)
 let app = null
 let model = null
-let isDebugLogged = false // デバッグログ用フラグ
 
 /* =====================
-   マッピング定義
+  マッピング定義
+  ★配列形式 [] に変更しました。
+  ★コンソールで見つけた「Part...」IDをここに追加してください！
 ===================== */
 const MAPPINGS = {
   motions: {
@@ -36,32 +38,35 @@ const MAPPINGS = {
     '癒し系': { idle: 'Idle_Heal',  success: 'Success_Heal' },
     'クール系': { idle: 'Idle_Cool',  success: 'Success_Cool' }
   },
+
   outfits: {
-    '元気系': 'Outfit_Power',
-    '癒し系': 'Outfit_Heal',
-    'クール系': 'Outfit_Cool'
+    '元気系': ['Outfit_Power'], 
+    '癒し系': ['Outfit_Heal'],
+    'クール系': ['Outfit_Cool']
   },
+
   params: {
     frontHairstyle: {
-      'ぱっつん': 'ParamFrontHair_Pattun',
-      '３つ分け': 'ParamFrontHair_Three',
-      '２・８分け': 'ParamFrontHair_TwoEight'
+      // 例: ['ParamFrontHair_Pattun', 'PartFrontHair_Pattun'] のように並記する
+      'ぱっつん': ['ParamFrontHair_Pattun','Part8'], 
+      '３つ分け': ['ParamFrontHair_Three'],
+      '２・８分け': ['ParamFrontHair_TwoEight']
     },
     backHairstyle: {
-      'サイドテール': 'ParamBackHair_Side',
-      '一つ結び': 'ParamBackHair_One',
-      'ショート': 'ParamBackHair_Short'
+      'サイドテール': ['ParamBackHair_Side','Part106'],
+      '一つ結び': ['ParamBackHair_One'],
+      'ショート': ['ParamBackHair_Short']
     },
     eyes: {
-      '丸目': 'ParamEyeType_Round', // ※ID名要確認
-      'たれ目': 'ParamEyeType_Droop',
-      '釣り目': 'ParamEyeType_Sharp'
+      '丸目': ['ParamEyeStyle_Round'],
+      'たれ目': ['ParamEye_Droop'],
+      '釣り目': ['ParamEye_Sharp']
     }
   }
 }
 
 /* =====================
-   初期化
+  初期化
 ===================== */
 onMounted(async () => {
   if (!canvasRef.value) return
@@ -69,39 +74,59 @@ onMounted(async () => {
   app = new PIXI.Application({
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
-    backgroundAlpha: 0, 
+    backgroundAlpha: 0,
     autoDensity: true,
     resolution: window.devicePixelRatio || 1,
     antialias: true
   })
 
-  // モデル読み込み
-  model = await Live2DModel.from(
-    '/live2d/study/study.model3.json',
-    { autoInteract: false }
-  )
+  // クラッシュ回避
+  if (app.renderer.events) {
+    app.renderer.events.destroy()
+    delete app.renderer.events
+  }
+  if (app.renderer.plugins?.interaction) {
+    app.renderer.plugins.interaction.destroy()
+    delete app.renderer.plugins.interaction
+  }
 
-  // ■ 位置合わせ（足元基準）
-  model.anchor.set(0.5, 1.0) 
+  // モデル読み込み
+  try {
+    model = await Live2DModel.from(
+      '/live2d/study/study.model3.json',
+      { autoInteract: false, loadPose: false }
+    )
+  } catch (e) {
+    console.error("モデル読み込みエラー:", e)
+    return
+  }
+
+  // ★重要：コンソールから model を操作できるようにする
+  window.live2d = model
+
+  // 位置調整
+  model.anchor.set(0.5, 1.0)
   model.x = app.screen.width / 2
   model.y = app.screen.height
-
-  // ■ スケール調整
-  // 1.6倍は大きすぎて顔が見切れる可能性が高いので、まずは0.8倍くらいからスタート推奨
-  const scale = Math.min(
-      app.screen.width / model.width,
-      app.screen.height / model.height
-  ) * 0.9; 
-
+  const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height) * 1.6
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // ■ 毎フレーム更新（パラメータ強制上書き）
-  app.ticker.add(() => {
-    updateAppearance()
-  })
+  // ★★★ 【絶対安全なデバッグログ】 ★★★
+  console.group("🔍 Live2D Explorer")
+  console.log("▼ 下の [CoreModel] をクリックして、中にある _partIds や parts.ids を探してください ▼")
+  
+  if (model.internalModel && model.internalModel.coreModel) {
+      console.log("CoreModel:", model.internalModel.coreModel)
+  } else {
+      console.log("Model:", model)
+  }
+  console.groupEnd()
+  // ★★★★★★★★★★★★★★★★★★★★★
 
-  // 初回モーション再生
+  // カスタム適用（優先度 UTILITY）
+  app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
+
   playMotionByState()
 
   window.addEventListener('resize', onResize)
@@ -113,110 +138,90 @@ onBeforeUnmount(() => {
 })
 
 /* =====================
-   見た目切り替え（パラメータ更新）
+  見た目切り替え（配列対応・二刀流版）
 ===================== */
 const updateAppearance = () => {
   if (!model) return
   const core = model.internalModel.coreModel
 
-  // ★★★ デバッグ機能：修正版 ★★★
-  // C++の配列は .includes() が使えないため、ループでIDリストを作る必要があります
-  if (!isDebugLogged) {
-    console.group("🔍 Live2D ID Check Mode")
-    
-    // 1. モデル内の全パラメータIDを取得してJSの配列にする
-    const paramCount = core.getParameterCount()
-    const allIds = []
-    for(let i=0; i<paramCount; i++){
-        allIds.push(core.getParameterId(i))
-    }
-    console.log("Model has these IDs:", allIds)
+  // ヘルパー：IDが配列でも単体でも、パラメータとパーツの両方にセットする
+  const applySettings = (idOrArray, isActive) => {
+    // 配列に統一
+    const ids = Array.isArray(idOrArray) ? idOrArray : [idOrArray]
+    const value = isActive ? 1 : 0
 
-    // 2. マッピングとの照合
-    const checkGroup = (groupName, currentVal) => {
-        const map = MAPPINGS.params[groupName]
-        if(!map) return
-        Object.entries(map).forEach(([name, id]) => {
-            const exists = allIds.includes(id) // これでチェック可能になる
-            const icon = exists ? "✅" : "❌ NOT FOUND"
-            const styles = exists ? "color: green" : "color: red; font-weight: bold"
-            console.log(`%c[${groupName}] ${name} -> ${id} : ${icon}`, styles)
-        })
-    }
-    checkGroup('frontHairstyle', props.frontHairstyle)
-    checkGroup('backHairstyle', props.backHairstyle)
-    checkGroup('eyes', props.eyes)
-    checkGroup('outfits', 'CheckOutfitParams') // 服装パラメータも確認用
-
-    console.groupEnd()
-    isDebugLogged = true
+    ids.forEach(id => {
+      // 1. パラメータ(変形)としてセット
+      core.setParameterValueById(id, value)
+      // 2. パーツ(不透明度)としてセット
+      core.setPartOpacityById(id, value)
+    })
   }
-  // ★★★★★★★★★★★★★★★★★
 
-  // ■ 服装
-  Object.entries(MAPPINGS.outfits).forEach(([key, paramId]) => {
-    // IDが存在するかチェックしてからセット（エラー防止）
-    if(core.getParameterIndex(paramId) !== -1) {
-        core.setParameterValueById(paramId, key === props.personality ? 1 : 0)
-    }
+  /* 服装 */
+  Object.entries(MAPPINGS.outfits).forEach(([key, ids]) => {
+    applySettings(ids, key === props.personality)
   })
 
-  // ■ 髪・目
+  /* 前髪・後ろ髪・目 */
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
-    if(!map) return
-    Object.entries(map).forEach(([name, id]) => {
-       if(core.getParameterIndex(id) !== -1) {
-          core.setParameterValueById(id, name === selected ? 1 : 0)
-       }
+    Object.entries(map).forEach(([name, ids]) => {
+      applySettings(ids, name === selected)
     })
   }
 
   setParamGroup('frontHairstyle', props.frontHairstyle)
   setParamGroup('backHairstyle', props.backHairstyle)
   setParamGroup('eyes', props.eyes)
-  
-  // 更新通知
-  model.internalModel.update()
 }
 
 /* =====================
-   モーション再生
+  モーション再生（ループ対応版）
 ===================== */
-const playMotionByState = () => {
+const playMotionByState = async () => {
   if (!model) return
 
   const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
   let groupName = motionSet.idle
-  let priority = 1 // 1: Idle, 2: Normal, 3: Force
+  let priority = 1
+  let isIdle = true 
 
   if (props.emotion === 'celebrate') {
     groupName = motionSet.success
     priority = 3
+    isIdle = false
   }
 
-  // 再生（エラーが出ても止まらないようにtry-catch）
-  try {
-      // 第2引数はindex(基本的に0), 第3引数は優先度
-      model.motion(groupName, 0, priority)
-  } catch(e) {
-      console.warn(`Motion [${groupName}] not found or failed.`, e)
+  // 再生開始
+  const finished = await model.motion(groupName, 0, { priority })
+
+  // ループ処理
+  if (finished && isIdle) {
+    const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
+    if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
+      playMotionByState()
+    }
   }
 }
 
 /* =====================
-   Watch & Resize
+  watch
 ===================== */
 watch(
   () => [props.personality, props.emotion],
-  () => { playMotionByState() },
-  { immediate: false } // onMountedで一度呼ぶのでfalse推奨
+  () => {
+    playMotionByState()
+  },
+  { immediate: true }
 )
 
+/* =====================
+  resize
+===================== */
 const onResize = () => {
   if (!app || !model) return
   app.resize()
-  // リサイズ時も中央下揃え
   model.x = app.screen.width / 2
   model.y = app.screen.height
 }
@@ -231,6 +236,7 @@ const onResize = () => {
   align-items: flex-end;
   pointer-events: none;
 }
+
 canvas {
   width: 100%;
   height: 100%;

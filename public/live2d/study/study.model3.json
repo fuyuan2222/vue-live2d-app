@@ -37,17 +37,17 @@
 					"File": "ParamBreath_Heal.motion3.json"
 				}
 			],
-			"Succcess_Cool": [
+			"Success_Cool": [
 				{
 					"File": "Success_Cool.motion3.json"
 				}
 			],
-			"Succcess_Genki": [
+			"Success_Genki": [
 				{
 					"File": "Success_Genki.motion3.json"
 				}
 			],
-			"Succcess_Heal": [
+			"Success_Heal": [
 				{
 					"File": "Success_Heal.motion3.json"
 				}
