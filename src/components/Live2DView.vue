@@ -29,7 +29,7 @@ let model = null
 
 /* =====================
   マッピング定義
-  ※ study.model3.json のキー名と一致させる
+  ★ご指定の正しいIDに更新済み
 ===================== */
 const MAPPINGS = {
   motions: {
@@ -71,6 +71,7 @@ const MAPPINGS = {
     }
   }
 }
+
 
 /* =====================
   初期化
@@ -115,23 +116,18 @@ onMounted(async () => {
   model.scale.set(scale)
   app.stage.addChild(model)
 
-  // 毎フレーム見た目を更新（モーション上書き対策）
-  app.ticker.add(() => {
-    updateAppearance()
-  })
+  // ★★★ 修正箇所：優先度 UTILITY を追加 ★★★
+  // これにより、Live2Dのモーション更新処理が終わった「後」に
+  // updateAppearance が実行されるため、確実にカスタム設定で上書きされます。
+  app.ticker.add(updateAppearance, null, PIXI.UPDATE_PRIORITY.UTILITY)
 
   playMotionByState()
 
   window.addEventListener('resize', onResize)
 })
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize)
-  if (app) app.destroy(true, { children: true })
-})
-
 /* =====================
   見た目切り替え
+  （デバッグコード削除済み・毎フレーム実行）
 ===================== */
 const updateAppearance = () => {
   if (!model) return
@@ -145,7 +141,7 @@ const updateAppearance = () => {
     )
   })
 
-  /* パーツ */
+  /* 前髪・後ろ髪・目 */
   const setParamGroup = (group, selected) => {
     const map = MAPPINGS.params[group]
     Object.entries(map).forEach(([name, id]) => {
@@ -177,17 +173,13 @@ const playMotionByState = async () => {
   }
 
   // 再生開始
-  // awaitをつけることで、再生が終わるまで待機できる
   const finished = await model.motion(groupName, 0, { priority })
 
-  // ★ループ処理のキモ★
-  // 1. 再生が正常に終わった (finished === true)
-  // 2. まだアイドル状態であるべき (isIdle === true)
-  // 3. ユーザーが設定を変えていない (今のpropsと同じモーションである)
+  // ループ処理：再生が正常終了し、かつアイドル状態であるべきなら再帰呼び出し
   if (finished && isIdle) {
     const currentMotionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
     
-    // まだ同じモーションを再生すべき状態なら、自分自身を再帰呼び出ししてループさせる
+    // 設定が変わっていなければループ再生
     if (groupName === currentMotionSet.idle && props.emotion !== 'celebrate') {
       playMotionByState()
     }
@@ -201,7 +193,6 @@ watch(
   () => [props.personality, props.emotion],
   () => {
     // 設定が変わったら即座に新しいモーションを再生
-    // これにより、ループ待機中の古いモーションはキャンセルされ、新しいのが始まる
     playMotionByState()
   },
   { immediate: true }
