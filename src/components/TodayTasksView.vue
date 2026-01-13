@@ -59,11 +59,11 @@ const {
 /* state */
 const showCompleteEffect = ref(false)
 
-// ★ここ修正：消えていた変数を復活させました！これがないと動きません！
-const currentFocus = ref('neutral') 
-const setFocus = (target) => {
-  currentFocus.value = target
-}
+// // ★ここ修正：消えていた変数を復活させました！これがないと動きません！
+// const currentFocus = ref('neutral') 
+// const setFocus = (target) => {
+//   currentFocus.value = target
+// }
 
 /* 今日のタスク */
 const filteredTodayTasks = computed(() => {
