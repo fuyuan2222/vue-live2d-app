@@ -60,7 +60,10 @@ onMounted(async () => {
     view: canvasRef.value,
     resizeTo: canvasRef.value.parentElement,
     backgroundAlpha: 0,
-    autoStart: true
+    autoStart: true,
+    resolution: window.devicePixelRatio || 2, // スマホの画素密度に合わせる
+    autoDensity: true, // CSSサイズと内部解像度を同期させる
+    antialias: true    // ギザギザを滑らかにする
   });
 
   // クラッシュ防止（イベント破壊）
