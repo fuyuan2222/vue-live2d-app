@@ -30,14 +30,14 @@ const MAPPINGS = {
   },
   outfits: {
     '元気系': 'Outfit_Power',
-    '癒し系': 'Outfit_heal', 
+    '癒し系': 'Outfit_Heal', 
     'クール系': 'Outfit_Cool'
   },
   params: {
     frontHairstyle: {
-      'ぱっつん': 'ParamFrontHair_pattun',
+      'ぱっつん': 'ParamFrontHair_Pattun',
       '３つ分け': 'ParamFrontHair_Three',
-      '２・８分け': 'ParamFrontHair_TowEight'
+      '２・８分け': 'ParamFrontHair_TwoEight'
     },
     backHairstyle: {
       'サイドテール': 'ParamBackHair_Side',
