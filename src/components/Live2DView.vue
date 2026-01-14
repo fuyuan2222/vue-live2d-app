@@ -23,6 +23,10 @@ const canvasRef = ref(null)
 let app = null
 let model = null
 
+// スマホの誤作動防止用（スクロールかタップか判定する）
+let touchStartX = 0
+let touchStartY = 0
+
 const MAPPINGS = {
   motions: {
     '元気系': { idle: 'Idle_Genki', cheer: 'Cheer_Genki', success: 'Success_Genki' },
@@ -53,43 +57,78 @@ const MAPPINGS = {
   }
 }
 
-// ★修正: グローバルクリックハンドラ
-// タスク操作を邪魔せず、かつ「前のモーションを即停止」して反応させる
-const handleGlobalClick = async (event) => {
-  // ① UIパーツ（ボタンやタスク、チェックボックスなど）を除外
-  if (event.target.closest('button, input, label, a, .task-text, .delete-icon-btn')) {
-    return
-  }
-
+// ---------------------------------------------------------
+// ★共通: ヒット判定＆モーション再生ロジック
+// ---------------------------------------------------------
+const attemptHit = async (clientX, clientY) => {
   if (!model || !canvasRef.value) return
 
-  // ② 座標計算
+  // ① 座標計算
   const rect = canvasRef.value.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+  const x = clientX - rect.left
+  const y = clientY - rect.top
 
-  // ③ HitTest判定
+  // ② HitTest判定
   const hitAreas = model.hitTest(x, y)
 
   if (hitAreas.length > 0) {
     console.log('Hit Area:', hitAreas)
 
     const motionSet = MAPPINGS.motions[props.personality] || MAPPINGS.motions['元気系']
-    // クリック時はCheerモーション（必要に応じてHead/Bodyで分岐可能）
     const actionMotion = motionSet.cheer
 
     try {
-      // ★★★ ここが重要！ ★★★
-      // 再生中の全モーションを強制停止させ、クロスフェードなしで切り替える
+      // 既存モーションを停止して即座に反応させる
       model.internalModel.motionManager.stopAllMotions()
-
-      // 新しいモーションを再生
       await model.motion(actionMotion, 0, { priority: 3 })
-      
-      // 再生終了後は通常のループに戻る
       playMotionByState()
     } catch (e) {
       console.log('Motion interrupted', e)
+    }
+  }
+}
+
+// ---------------------------------------------------------
+// ★PC用: クリックイベント
+// ---------------------------------------------------------
+const handleGlobalClick = (event) => {
+  // UIパーツ（ボタンやタスクなど）をクリックした場合は無視
+  if (event.target.closest('button, input, label, a, .task-text, .delete-icon-btn, .modal-content')) {
+    return
+  }
+  attemptHit(event.clientX, event.clientY)
+}
+
+// ---------------------------------------------------------
+// ★スマホ用: タッチ開始 (位置を記憶)
+// ---------------------------------------------------------
+const handleTouchStart = (event) => {
+  if (event.touches.length > 0) {
+    touchStartX = event.touches[0].clientX
+    touchStartY = event.touches[0].clientY
+  }
+}
+
+// ---------------------------------------------------------
+// ★スマホ用: タッチ終了 (タップ判定)
+// ---------------------------------------------------------
+const handleTouchEnd = (event) => {
+  // UIパーツへのタップなら無視
+  if (event.target.closest('button, input, label, a, .task-text, .delete-icon-btn, .modal-content')) {
+    return
+  }
+
+  if (event.changedTouches.length > 0) {
+    const endX = event.changedTouches[0].clientX
+    const endY = event.changedTouches[0].clientY
+
+    // 指の移動距離を計算
+    const diffX = Math.abs(endX - touchStartX)
+    const diffY = Math.abs(endY - touchStartY)
+
+    // 移動が10px以内なら「タップ」とみなす (スクロール対策)
+    if (diffX < 10 && diffY < 10) {
+      attemptHit(endX, endY)
     }
   }
 }
@@ -106,6 +145,7 @@ onMounted(async () => {
     resolution: window.devicePixelRatio || 2,
   })
 
+  // PIXIのデフォルトイベントは無効化（Windowイベントで制御するため）
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -139,14 +179,21 @@ onMounted(async () => {
 
   window.addEventListener('resize', onResize)
   
-  // ★重要: クリックイベント登録
+  // ★イベントリスナー登録 (PC & スマホ)
+  // PCでのクリック
   window.addEventListener('click', handleGlobalClick)
+  // スマホでのタップ制御
+  window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  window.addEventListener('touchend', handleTouchEnd)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
-  // ★重要: イベント解除
+  
+  // ★イベントリスナー解除
   window.removeEventListener('click', handleGlobalClick)
+  window.removeEventListener('touchstart', handleTouchStart)
+  window.removeEventListener('touchend', handleTouchEnd)
   
   if (app) app.destroy(true, { children: true })
 })
