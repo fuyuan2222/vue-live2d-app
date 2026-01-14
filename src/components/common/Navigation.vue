@@ -13,14 +13,14 @@
       <svg class="custom-icon" width="27" height="27" viewBox="0 0 27 27" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path d="M21.8363 8.33625L16.4025 2.9025C15.9862 2.48625 15.4125 2.25 14.8162 2.25H6.75C5.5125 2.25 4.51125 3.2625 4.51125 4.5L4.5 22.5C4.5 23.7375 5.50125 24.75 6.73875 24.75H20.25C21.4875 24.75 22.5 23.7375 22.5 22.5V9.93375C22.5 9.3375 22.2638 8.76375 21.8363 8.33625ZM11.5087 19.4513L9.12375 17.0662C9.0196 16.9621 8.93698 16.8384 8.88061 16.7024C8.82424 16.5663 8.79523 16.4204 8.79523 16.2731C8.79523 16.1258 8.82424 15.98 8.88061 15.8439C8.93698 15.7078 9.0196 15.5842 9.12375 15.48C9.2279 15.3758 9.35155 15.2932 9.48764 15.2369C9.62372 15.1805 9.76958 15.1515 9.91687 15.1515C10.0642 15.1515 10.21 15.1805 10.3461 15.2369C10.4822 15.2932 10.6058 15.3758 10.71 15.48L12.2963 17.0662L16.2788 13.0837C16.3829 12.9796 16.5066 12.897 16.6426 12.8406C16.7787 12.7842 16.9246 12.7552 17.0719 12.7552C17.2192 12.7552 17.365 12.7842 17.5011 12.8406C17.6372 12.897 17.7608 12.9796 17.865 13.0837C17.9692 13.1879 18.0518 13.3116 18.1081 13.4476C18.1645 13.5837 18.1935 13.7296 18.1935 13.8769C18.1935 14.0242 18.1645 14.17 18.1081 14.3061C18.0518 14.4422 17.9692 14.5658 17.865 14.67L13.095 19.44C12.6675 19.89 11.9475 19.89 11.5087 19.4513ZM15.75 10.125C15.1313 10.125 14.625 9.61875 14.625 9V3.9375L20.8125 10.125H15.75Z" fill="currentColor"/>
       </svg>
-      <span>タスク一覧</span>
+      <span class="nav-text">タスク一覧</span>
     </button>
     
     <button @click="$emit('change-tab', 'character')" :class="{ 'active': activeTab === 'character' }">
       <svg class="custom-icon" width="16" height="32" viewBox="0 0 16 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 17C14.2091 17 16 18.7909 16 21V28C16 30.2091 14.2091 32 12 32H4C1.79086 32 1.12747e-07 30.2091 0 28V21C0 18.7909 1.79086 17 4 17H12ZM8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0Z" fill="currentColor"/>
       </svg>
-      <span>キャラクター</span>
+      <span class="nav-text">キャラクター</span>
     </button>
     
     <button @click="$emit('change-tab', 'categories')" :class="{ 'active': activeTab === 'categories' }">
@@ -31,14 +31,14 @@
     </button>
     
     <button @click="$emit('change-tab', 'notifications')" :class="{ 'active': activeTab === 'notifications' }">
-      <svg class="custom-icon" width="26" height="26" viewBox="0 0 26 26" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5.19999 10.4C5.19928 8.77937 5.70339 7.19875 6.64228 5.87779C7.58116 4.55682 8.9082 3.56111 10.439 3.029C10.3797 2.6576 10.4017 2.27777 10.5035 1.9157C10.6052 1.55363 10.7843 1.21795 11.0284 0.931813C11.2725 0.645679 11.5758 0.415906 11.9173 0.258346C12.2588 0.100786 12.6304 0.0191917 13.0065 0.0191917C13.3826 0.0191917 13.7542 0.100786 14.0957 0.258346C14.4372 0.415906 14.7405 0.645679 14.9846 0.931813C15.2286 1.21795 15.4077 1.55363 15.5095 1.9157C15.6113 2.27777 15.6333 2.6576 15.574 3.029C17.1023 3.56329 18.4266 4.55994 19.363 5.88072C20.2994 7.2015 20.8016 8.78094 20.8 10.4V18.2L24.7 20.8V22.1H1.29999V20.8L5.19999 18.2V10.4ZM15.6 23.4C15.6 24.0896 15.3261 24.7509 14.8385 25.2385C14.3509 25.7261 13.6896 26 13 26C12.3104 26 11.6491 25.7261 11.1615 25.2385C10.6739 24.7509 10.4 24.0896 10.4 23.4H15.6Z" fill="currentColor"/>
-      </svg>
+      <div class="icon-wrapper">
+        <svg :class="['custom-icon', { 'shake-bell': unreadCount > 0 }]" width="26" height="26" viewBox="0 0 26 26" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.19999 10.4C5.19928 8.77937 5.70339 7.19875 6.64228 5.87779C7.58116 4.55682 8.9082 3.56111 10.439 3.029C10.3797 2.6576 10.4017 2.27777 10.5035 1.9157C10.6052 1.55363 10.7843 1.21795 11.0284 0.931813C11.2725 0.645679 11.5758 0.415906 11.9173 0.258346C12.2588 0.100786 12.6304 0.0191917 13.0065 0.0191917C13.3826 0.0191917 13.7542 0.100786 14.0957 0.258346C14.4372 0.415906 14.7405 0.645679 14.9846 0.931813C15.2286 1.21795 15.4077 1.55363 15.5095 1.9157C15.6113 2.27777 15.6333 2.6576 15.574 3.029C17.1023 3.56329 18.4266 4.55994 19.363 5.88072C20.2994 7.2015 20.8016 8.78094 20.8 10.4V18.2L24.7 20.8V22.1H1.29999V20.8L5.19999 18.2V10.4ZM15.6 23.4C15.6 24.0896 15.3261 24.7509 14.8385 25.2385C14.3509 25.7261 13.6896 26 13 26C12.3104 26 11.6491 25.7261 11.1615 25.2385C10.6739 24.7509 10.4 24.0896 10.4 23.4H15.6Z" fill="currentColor"/>
+        </svg>
+        <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
+      </div>
       <span class="nav-text">通知</span>
-      <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
     </button>
-    
-  
   </nav>
 </template>
 
@@ -112,9 +112,10 @@ onUnmounted(() => {
   position: relative;
   text-decoration: none;
 }
-/* ⬇️ モバイル版：テキスト非表示 ⬇️ */
-.navigation button span,
-.navigation .external-link-button span {
+
+/* ⬇️ 【重要】span全体ではなく、nav-textクラスだけを消すように変更 */
+.navigation button .nav-text,
+.navigation .external-link-button .nav-text {
   display: none;
 }
 
@@ -138,21 +139,53 @@ onUnmounted(() => {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* バッジのスタイル */
+/* アイコンとバッジをまとめるラッパー */
+.icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* バッジのスタイル (赤丸) */
 .navigation .badge {
-  background-color: #ff5722;
+  background-color: #ff3b30;
   color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 0.8em;
+  border-radius: 10px;
+  padding: 2px 5px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 1;
+  min-width: 16px;
+  text-align: center;
+  
+  /* 位置調整 (アイコンの右上) */
   position: absolute;
-  top: 0;
-  right: 0;
-  transform: translate(50%, -50%);
+  top: -5px;
+  right: -8px;
+  border: 2px solid #ff8c00; /* 背景と同じ枠線で視認性UP */
+  z-index: 10;
+}
+
+/* 🔔 ベル揺れアニメーション */
+@keyframes bell-shake {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(15deg); }
+  30% { transform: rotate(-15deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-10deg); }
+  75% { transform: rotate(5deg); }
+  85% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
+}
+
+.shake-bell {
+  animation: bell-shake 2s infinite; /* 2秒ごとに揺らす */
+  transform-origin: top center;
 }
 
 /* ------------------------------------------------ */
-/* PC版 (サイドバー) のスタイル                       */
+/* PC版 (サイドバー) のスタイル                       */
 /* ------------------------------------------------ */
 @media (min-width: 768px) {
   .navigation {
@@ -165,16 +198,16 @@ onUnmounted(() => {
     justify-content: flex-start;
     align-items: flex-start;
     flex-shrink: 0;
-    width: 250px; /* ⬅️ 幅を広げたサイズ */
+    width: 250px;
     background-color: #ff8c00;
-    padding: 30px 15px; /* ⬅️ パディングを大きく */
+    padding: 30px 15px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.15);
     max-width: none;
     margin: 0;
   }
   .nav-title { 
     color: #fff;
-    font-size: 36px; /* ⬅️ サイズを大きく */
+    font-size: 36px;
     margin-bottom: 30px; 
     text-align: center;
     width: 100%;
@@ -183,13 +216,13 @@ onUnmounted(() => {
   .navigation .external-link-button {
     width: 100%;
     justify-content: flex-start;
-    padding: 18px 12px; /* ⬅️ パディングを大きく */
-    margin-bottom: 8px; /* ⬅️ マージンを大きく */
+    padding: 18px 12px;
+    margin-bottom: 8px;
     color: #fff;
     border-radius: 0;
     transition: background-color 0.3s ease;
     flex-direction: row;
-    font-size: 18px; /* ⬅️ フォントを大きく */
+    font-size: 18px;
   }
   .navigation button:hover,
   .navigation .external-link-button:hover {
@@ -202,17 +235,18 @@ onUnmounted(() => {
   .navigation .custom-icon {
     width: 32px;
     height: 32px;
-    margin-right: 15px; /* ⬅️ 間隔を広げる */
+    margin-right: 15px;
     fill: currentColor;
   }
-  .navigation button span {
-    display: initial; /* ⬅️ PC版でテキストを再表示 */
+  /* PC版でテキストを表示 */
+  .navigation button .nav-text {
+    display: initial;
     font-size: 18px;
   }
+  /* PC版でのバッジ位置微調整（少し内側に寄せる） */
   .navigation .badge {
-    right: 15px;
-    top: 50%;
-    transform: translate(50%, -50%);
+    top: -5px;
+    right: -5px;
   }
 }
 </style>

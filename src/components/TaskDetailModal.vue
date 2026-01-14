@@ -1,108 +1,182 @@
 <template>
-  <div v-if="task" class="modal-overlay" @click.self="$emit('close')">
+  <div class="modal-overlay" @click.self="closeWithoutSave">
     <div class="modal-content">
-      <button class="close-button" @click="$emit('close')">&times;</button>
-      <h2>タスク詳細</h2>
-      
-      <div class="detail-group">
-        <label>タスク名:</label>
-        <p>{{ task.text }}</p>
-      </div>
-      
-      <div class="detail-group">
-        <label>ステータス:</label>
-        <p :class="task.done ? 'status-done' : 'status-active'">
-          {{ task.done ? '完了' : '未完了' }}
-        </p>
+      <header class="modal-header">
+        <h3>タスク詳細</h3>
+        <button class="close-btn" @click="closeWithoutSave">×</button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>タスク内容</label>
+          <input 
+            v-model="editingTask.text" 
+            type="text" 
+            class="input-text"
+            placeholder="タスクを入力..."
+          >
+        </div>
+
+        <div class="form-group">
+          <label>優先度</label>
+          <div class="priority-selector">
+            <button 
+              v-for="p in ['high', 'medium', 'low']" 
+              :key="p"
+              type="button"
+              :class="['p-btn', p, { active: editingTask.priority === p }]"
+              @click="editingTask.priority = p"
+            >
+              {{ p === 'high' ? '高' : p === 'medium' ? '中' : '低' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>締切日</label>
+          <input 
+            v-model="editingTask.dueDate" 
+            type="date" 
+            class="input-date"
+          >
+        </div>
+
+        <div class="form-group">
+          <label>時間指定リマインダー</label>
+          <div class="reminder-input-group">
+            <input 
+              v-model="newReminderTime" 
+              type="datetime-local" 
+              class="input-date"
+            >
+            <button type="button" @click="addReminder" class="add-btn">追加</button>
+          </div>
+          
+          <ul class="reminder-list">
+            <li v-for="(time, index) in editingTask.reminderTimes" :key="index" class="reminder-item">
+              <span>⏰ {{ formatTime(time) }}</span>
+              <button @click="removeReminder(index)" class="remove-btn">削除</button>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <div class="detail-group">
-        <label>優先度:</label>
-        <p :class="task.priority">{{ task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低' }}</p>
-      </div>
-
-      <div class="detail-group">
-        <label>カテゴリ:</label>
-        <p>{{ task.category }}</p>
-      </div>
-      
-      <div class="detail-group">
-        <label>期限:</label>
-        <p>{{ task.dueDate }}</p>
-      </div>
+      <footer class="modal-footer">
+        <button class="save-btn" @click="saveAndClose">保存して閉じる</button>
+      </footer>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, inject } from 'vue'
+
 const props = defineProps({
   task: {
     type: Object,
-    default: null
+    required: true
   }
-});
+})
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close'])
+
+// App.vueから更新用関数をもらう
+const { updateTask } = inject('task-data')
+
+// ★重要：propsのコピーを作成して、編集用オブジェクト(editingTask)にする
+// これで編集中は親データに影響せず、保存ボタンで一括反映される
+const editingTask = ref(JSON.parse(JSON.stringify(props.task)))
+
+// もしreminderTimesが無ければ初期化
+if (!editingTask.value.reminderTimes) {
+  editingTask.value.reminderTimes = []
+}
+
+const newReminderTime = ref('')
+
+const addReminder = () => {
+  if (newReminderTime.value) {
+    if (!editingTask.value.reminderTimes.includes(newReminderTime.value)) {
+      editingTask.value.reminderTimes.push(newReminderTime.value)
+      editingTask.value.reminderTimes.sort()
+    }
+    newReminderTime.value = ''
+  }
+}
+
+const removeReminder = (index) => {
+  editingTask.value.reminderTimes.splice(index, 1)
+}
+
+const formatTime = (isoString) => {
+  const d = new Date(isoString)
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+// ★保存ボタンを押したときだけ実行
+const saveAndClose = () => {
+  updateTask(editingTask.value) // App.vueの関数を叩いて保存
+  emit('close')
+}
+
+// 保存せずに閉じる場合
+const closeWithoutSave = () => {
+  emit('close')
+}
 </script>
 
 <style scoped>
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* 背景を暗くする */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000; /* 最前面に表示 */
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center; z-index: 1000;
 }
-
 .modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  max-width: 90%;
-  width: 400px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
+  background: white; width: 90%; max-width: 400px;
+  border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;
 }
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #333;
-  cursor: pointer;
+.modal-header {
+  padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #eee;
+  display: flex; justify-content: space-between; align-items: center;
 }
-
-.detail-group {
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #eee;
+.modal-header h3 { margin: 0; font-size: 1.1rem; }
+.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+.modal-body { padding: 20px; overflow-y: auto; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; color: #555; }
+.input-text, .input-date {
+  width: 100%; padding: 10px; border: 1px solid #ddd;
+  border-radius: 6px; font-size: 1rem; box-sizing: border-box;
 }
-
-.detail-group label {
-  font-weight: bold;
-  color: #ff8c00; /* アクセントカラー */
-  display: block;
-  margin-bottom: 5px;
+.priority-selector { display: flex; gap: 10px; }
+.p-btn {
+  flex: 1; padding: 8px; border: 1px solid #eee; background: #f9f9f9;
+  border-radius: 6px; cursor: pointer;
 }
-
-.detail-group p {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
+.p-btn.active { font-weight: bold; border: 2px solid #555; }
+.p-btn.high.active { background: #ffcccc; border-color: #ff9999; }
+.p-btn.medium.active { background: #fff4b3; border-color: #ffcc00; }
+.p-btn.low.active { background: #ccf0ff; border-color: #66ccff; }
+.reminder-input-group { display: flex; gap: 8px; margin-bottom: 10px; }
+.add-btn {
+  padding: 0 15px; background: #4CAF50; color: white;
+  border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;
 }
-
-.status-done { color: #4caf50; font-weight: bold; }
-.status-active { color: #ff8c00; font-weight: bold; }
-
-.high { color: #ff5722; }
-.medium { color: #ff9800; }
-.low { color: #4caf50; }
+.reminder-list { list-style: none; padding: 0; margin: 0; }
+.reminder-item {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f0f0f0; padding: 8px 12px; border-radius: 4px; margin-bottom: 5px; font-size: 0.9rem;
+}
+.remove-btn {
+  background: #ff5252; color: white; border: none; border-radius: 4px;
+  padding: 2px 8px; font-size: 0.8rem; cursor: pointer;
+}
+.modal-footer {
+  padding: 15px 20px; border-top: 1px solid #eee; text-align: right;
+}
+.save-btn {
+  background: #333; color: white; padding: 10px 20px;
+  border: none; border-radius: 6px; cursor: pointer;
+}
 </style>

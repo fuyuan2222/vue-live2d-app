@@ -36,8 +36,8 @@
         <h3>前髪</h3>
         <select v-model="characterFrontHairstyle">
           <option value="ぱっつん">ぱっつん</option>
-          <option value="３つ分け">３つ分け</option>
-          <option value="２・８分け">２・８分け</option>
+          <option value="３つ分け">アニメ風</option>
+          <option value="２・８分け">分け目</option>
         </select>
       </div>
 
@@ -45,7 +45,7 @@
         <h3>目</h3>
         <select v-model="characterEyes">
           <option value="丸目">丸目</option>
-          <option value="たれ目">たれ目</option>
+          <option value="たれ目">並行目</option>
           <option value="釣り目">釣り目</option>
         </select>
       </div>
@@ -98,15 +98,24 @@ h2 {
   color: #333;
 }
 
+/* CharacterCustomization.vue の <style scoped> 内 */
+
 .live2d-preview-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  flex-grow: 1;
-  min-height: 200px;
+  /* 固定サイズにしたい場合 */
+  width: 300px;  /* 横幅を固定 */
+  height: 350px; /* 高さを固定 */
+  padding-bottom: 10px;
+  margin: 0 auto; /* 中央寄せ */
   position: relative;
-  overflow: visible; 
-  margin-bottom: 20px;
+  overflow: hidden;
+}
+/* モバイルだけでなくデスクトップでも高さを抑える */
+@media (min-width: 768px) {
+  .live2d-preview-container {
+    height: 400px; /* ★PC版でも大きくなりすぎないように調整 */
+    flex-grow: 0;
+    margin-bottom: 30px;
+  }
 }
 
 .customization-options {
