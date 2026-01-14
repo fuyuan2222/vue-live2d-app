@@ -63,20 +63,15 @@
 
       <footer class="modal-footer">
         <div class="footer-actions">
-          <div class="sub-actions" v-if="canExport">
-            <a 
-              :href="googleCalendarLink" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              class="calendar-btn google-btn"
-            >
-              📅 Google
-            </a>
-
-            <button @click="downloadIcs" class="calendar-btn ics-btn">
-              📂 保存
-            </button>
-          </div>
+          <a 
+            v-if="canExport"
+            :href="googleCalendarLink" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="calendar-btn google-btn"
+          >
+            📅 Googleカレンダー
+          </a>
 
           <button class="save-btn" @click="saveAndClose">決定</button>
         </div>
@@ -131,38 +126,20 @@ const closeWithoutSave = () => {
   emit('close')
 }
 
+// カレンダー登録可能か判定（テキストと日付が必須）
 const canExport = computed(() => {
   return editingTask.value.text && editingTask.value.dueDate
 })
 
+// Googleカレンダー用リンク生成
 const googleCalendarLink = computed(() => {
   if (!canExport.value) return null
   const title = encodeURIComponent(editingTask.value.text)
   const details = encodeURIComponent(`優先度: ${editingTask.value.priority || 'medium'}\n(Todoアプリから登録)`)
   const dateStr = editingTask.value.dueDate.replace(/-/g, '')
+  // 終日イベントとして登録
   return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}`
 })
-
-const downloadIcs = () => {
-  if (!canExport.value) return
-  const title = editingTask.value.text
-  const description = `優先度: ${editingTask.value.priority || 'medium'}\n(Todoアプリから登録)`
-  const dateStr = editingTask.value.dueDate.replace(/-/g, '')
-  const icsContent = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//My Todo App//JP', 'BEGIN:VEVENT',
-    `SUMMARY:${title}`, `DESCRIPTION:${description}`,
-    `DTSTART;VALUE=DATE:${dateStr}`, `DTEND;VALUE=DATE:${dateStr}`,
-    'END:VEVENT', 'END:VCALENDAR'
-  ].join('\r\n')
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.setAttribute('download', 'task.ics')
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
 </script>
 
 <style scoped>
@@ -171,8 +148,8 @@ const downloadIcs = () => {
 .modal-content { 
   background: white; width: 90%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
   overflow: hidden; display: flex; flex-direction: column; 
-  max-height: 85vh; /* 少し高さを減らして余裕を持たせる */
-  margin-bottom: 20px; /* 画面下にくっつきすぎないように */
+  max-height: 85vh; /* 少し余裕を持たせる */
+  margin-bottom: 20px; 
 }
 .modal-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
 .modal-header h3 { margin: 0; font-size: 1.1rem; }
@@ -180,7 +157,7 @@ const downloadIcs = () => {
 .modal-body { padding: 20px; overflow-y: auto; }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9rem; color: #555; }
-.input-text, .input-date { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; } /* padding少し増やした */
+.input-text, .input-date { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
 .priority-selector { display: flex; gap: 10px; }
 .p-btn { flex: 1; padding: 10px; border: 1px solid #eee; background: #f9f9f9; border-radius: 6px; cursor: pointer; }
 .p-btn.active { font-weight: bold; border: 2px solid #555; }
@@ -193,11 +170,10 @@ const downloadIcs = () => {
 .reminder-item { display: flex; justify-content: space-between; align-items: center; background: #f0f0f0; padding: 8px 12px; border-radius: 4px; margin-bottom: 5px; font-size: 0.9rem; }
 .remove-btn { background: #ff5252; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 0.8rem; cursor: pointer; }
 
-/* ▼ フッターのスタイル修正 (ここが重要) 
-*/
+/* フッター調整 (スマホ対応) */
 .modal-footer {
   padding: 15px 20px; 
-  /* iPhoneのホームバー対策: 下に余白を確保 */
+  /* iPhoneホームバー対策 */
   padding-bottom: max(20px, env(safe-area-inset-bottom)); 
   border-top: 1px solid #eee; 
   background: #fff;
@@ -205,27 +181,22 @@ const downloadIcs = () => {
 
 .footer-actions {
   display: flex;
-  flex-direction: column; /* スマホファースト: 基本は縦積み */
+  flex-direction: column; /* スマホは縦積み */
   gap: 12px;
 }
 
-.sub-actions {
-  display: flex;
-  gap: 10px;
-}
-
-/* ボタン共通: 指で押しやすいサイズに */
+/* ボタン共通設定 */
 .calendar-btn, .save-btn {
   display: flex; 
   align-items: center; 
   justify-content: center;
-  padding: 14px; /* タップ領域を広げる */
+  padding: 14px; 
   border-radius: 8px; 
   text-decoration: none;
   font-size: 1rem; 
   font-weight: bold; 
   cursor: pointer;
-  width: 100%; /* 横幅いっぱいに */
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -233,25 +204,16 @@ const downloadIcs = () => {
   border: 1px solid #ddd; background: #fff; color: #555;
 }
 .google-btn:hover { background: #e8f0fe; color: #1967d2; border-color: #d2e3fc; }
-.ics-btn:hover { background: #f0f0f0; border-color: #ccc; }
 
 .save-btn {
   background: #333; color: white; border: none;
 }
 
-/* 画面が広いとき(PCなど)は横並びにする */
+/* 画面が広いとき(PCなど)は横並び */
 @media (min-width: 400px) {
   .footer-actions {
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .sub-actions {
-    flex: 1; /* 左側を埋める */
-  }
-  .save-btn {
-    width: auto; /* PCなら幅自動でOK */
-    min-width: 100px;
+    gap: 15px;
   }
 }
 </style>
