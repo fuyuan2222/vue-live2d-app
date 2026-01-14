@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { computed, inject, ref, watch, onMounted } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import Live2DView from './Live2DView.vue'
 import TaskDetailModal from './TaskDetailModal.vue'
 
@@ -71,9 +71,10 @@ const {
 } = inject('character-data')
 
 const showCompleteEffect = ref(false)
-const showResumeEffect = ref(false) // ★追加: チェックを外した時の反応用
+const showResumeEffect = ref(false) // チェックを外した時の反応用は残します
 const selectedTask = ref(null)
-const isStartingUp = ref(true)
+
+// ★削除: 起動時の強制フラグ isStartingUp を削除しました
 
 const filteredTodayTasks = computed(() => {
   const today = new Date().toISOString().slice(0, 10)
@@ -109,22 +110,21 @@ const getEmotion = computed(() => {
     return 'celebrate'
   }
 
-  // 2. 起動時 or タスク再開時 (Cheer)
-  // チェックを外した時(showResumeEffect)もここに入ります
-  if (isStartingUp.value || showResumeEffect.value) {
+  // 2. タスク再開時 (Cheer)
+  // チェックを外した時だけ応援します（起動時はここに入らない）
+  if (showResumeEffect.value) {
     return 'cheer'
   }
 
   // 3. 通常時 (Idle)
+  // 起動時はここになります
   return 'idle'
 })
 
 const openDetail = (task) => {
-  console.log('Open detail for:', task)
   selectedTask.value = task
 }
 
-// ★ 監視ロジックの強化
 watch(() => filteredTodayTasks.value.map(t => t.done), (newVal, oldVal) => {
   if (!oldVal) return
 
@@ -134,19 +134,14 @@ watch(() => filteredTodayTasks.value.map(t => t.done), (newVal, oldVal) => {
     setTimeout(() => { showCompleteEffect.value = false }, 2500)
   }
 
-  // ケースB: 完了状態から、未完了に戻った時 -> Cheer (追加)
-  // (以前は全てtrueだったのに、今はfalseが含まれている)
+  // ケースB: 完了状態から、未完了に戻った時 -> Cheer
   if (newVal.length > 0 && oldVal.every(v => v) && newVal.some(v => !v)) {
     showResumeEffect.value = true
     setTimeout(() => { showResumeEffect.value = false }, 2500)
   }
 }, { deep: true })
 
-onMounted(() => {
-  setTimeout(() => {
-    isStartingUp.value = false
-  }, 2500)
-})
+// ★削除: onMounted での強制Cheer処理も削除しました
 </script>
 
 <style scoped>
