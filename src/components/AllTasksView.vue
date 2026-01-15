@@ -173,7 +173,7 @@ const handleRegistration = () => {
     reminderTimes: [...regTask.value.reminderTimes],
     isEditing: false 
   })
-  // フォームリセット
+
   regTask.value.text = ''
   regTask.value.reminderTimes = []
   newReminderInput.value = ''
@@ -197,12 +197,10 @@ const showDetail = (task) => { selectedTask.value = task }
 </script>
 
 <style scoped>
-/* 全体レイアウト */
 .all-tasks-section { 
-  width: 100%; height: 100%; display: flex; flex-direction: column; background: #f4f6f8; /* 背景を少しグレーに */
+  width: 100%; height: 100%; display: flex; flex-direction: column; background: #f4f6f8; 
 }
 
-/* ヘッダー周り */
 .fixed-header { flex-shrink: 0; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 10; }
 .header-container { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
 .header-container h2 { margin: 0; font-size: 1.2rem; color: #333; }
@@ -213,9 +211,8 @@ const showDetail = (task) => { selectedTask.value = task }
 }
 .add-task-button:hover { background: #555; }
 
-/* フィルターエリア */
 /* --------------------
-   フィルターエリア (検索ボックス修正版)
+   フィルターエリア 
 -------------------- */
 .filters { 
   padding: 15px 20px; 
@@ -228,24 +225,24 @@ const showDetail = (task) => { selectedTask.value = task }
 .search-box { 
   position: relative; 
   width: 100%; 
-  display: flex;       /* 高さを安定させる */
-  align-items: center; /* 中身を垂直中央に */
+  display: flex;     
+  align-items: center; 
 }
 
 .search-icon { 
   position: absolute; 
-  left: 12px;            /* 左端からの距離を少し広げる */
+  left: 12px;
   top: 50%; 
-  transform: translateY(-50%); /* 完全に垂直中央にする */
-  font-size: 1.1rem;     /* サイズ調整 */
-  line-height: 1;        /* 絵文字特有の上下ズレを防止 */
-  pointer-events: none;  /* アイコンの上からでも入力できるようにする */
-  z-index: 2;            /* 入力欄より手前に表示 */
+  transform: translateY(-50%);
+  font-size: 1.1rem;    
+  line-height: 1;       
+  pointer-events: none;  
+  z-index: 2;            
 }
 
 .search-box input { 
   width: 100%; 
-  padding: 12px 15px 12px 42px; /* 左パディングを増やしてアイコンと文字が重ならないように */
+  padding: 12px 15px 12px 42px; 
   border: 1px solid #eee; 
   border-radius: 8px; 
   background: #f9f9f9; 
@@ -255,7 +252,6 @@ const showDetail = (task) => { selectedTask.value = task }
 .filter-row { display: flex; gap: 10px; }
 .filter-select { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 6px; background: #fff; color: #555; }
 
-/* --- タスクリストのデザイン改善 --- */
 .task-list { 
   flex: 1; overflow-y: auto; list-style: none; padding: 15px 20px; margin: 0; padding-bottom: 80px; 
 }
@@ -267,7 +263,7 @@ const showDetail = (task) => { selectedTask.value = task }
   margin-bottom: 12px;
   padding: 12px 15px;
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* 軽い影 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
   border: 1px solid transparent;
   transition: transform 0.1s, box-shadow 0.1s;
 }
@@ -315,7 +311,7 @@ const showDetail = (task) => { selectedTask.value = task }
 }
 .delete-btn:hover { opacity: 1; transform: scale(1.1); }
 
-/* モーダルCSS (既存維持) */
+/* モーダルCSS  */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 3000; }
 .modal-content { background: #fff; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 .form-group { margin-bottom: 15px; }

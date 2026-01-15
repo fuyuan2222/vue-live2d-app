@@ -53,7 +53,6 @@ import Navigation from './components/common/Navigation.vue'
 // 基本データ
 // --------------------
 const tasks = ref([])
-// ★変更: 初期値から「未分類」を削除しました
 const categories = ref(['仕事', '勉強', '趣味'])
 const notifications = ref([])
 const activeTab = ref('tasks')
@@ -162,8 +161,6 @@ const removeCategory = (categoryToRemove) => {
   
   categories.value = categories.value.filter(c => c !== categoryToRemove)
   
-  // ★変更: カテゴリ削除時の移動先を「未分類」ではなく「リストの先頭（例：仕事）」に変更
-  // リストが空になることは稀ですが、万が一の場合は空文字や'その他'などを入れます
   const fallbackCategory = categories.value[0] || 'その他'
   
   tasks.value.forEach(task => {
@@ -206,7 +203,6 @@ onMounted(() => {
   if (savedCategories) {
     categories.value = JSON.parse(savedCategories)
   } else {
-    // 初回起動時などのデフォルト設定（未分類なし）
     categories.value = ['仕事', '勉強', '趣味']
   }
 
@@ -271,7 +267,6 @@ provide('character-data', { characterPersonality, characterFrontHairstyle, chara
 </script>
 
 <style>
-/* 全体レイアウト */
 body, html {
   margin: 0;
   padding: 0;

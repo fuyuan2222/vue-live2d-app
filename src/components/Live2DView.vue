@@ -23,7 +23,6 @@ const canvasRef = ref(null)
 let app = null
 let model = null
 
-// スマホの誤作動防止用（スクロールかタップか判定する）
 let touchStartX = 0
 let touchStartY = 0
 
@@ -57,18 +56,11 @@ const MAPPINGS = {
   }
 }
 
-// ---------------------------------------------------------
-// ★共通: ヒット判定＆モーション再生ロジック
-// ---------------------------------------------------------
 const attemptHit = async (clientX, clientY) => {
   if (!model || !canvasRef.value) return
-
-  // ① 座標計算
   const rect = canvasRef.value.getBoundingClientRect()
   const x = clientX - rect.left
   const y = clientY - rect.top
-
-  // ② HitTest判定
   const hitAreas = model.hitTest(x, y)
 
   if (hitAreas.length > 0) {
@@ -78,7 +70,6 @@ const attemptHit = async (clientX, clientY) => {
     const actionMotion = motionSet.cheer
 
     try {
-      // 既存モーションを停止して即座に反応させる
       model.internalModel.motionManager.stopAllMotions()
       await model.motion(actionMotion, 0, { priority: 3 })
       playMotionByState()
@@ -88,20 +79,13 @@ const attemptHit = async (clientX, clientY) => {
   }
 }
 
-// ---------------------------------------------------------
-// ★PC用: クリックイベント
-// ---------------------------------------------------------
 const handleGlobalClick = (event) => {
-  // UIパーツ（ボタンやタスクなど）をクリックした場合は無視
   if (event.target.closest('button, input, label, a, .task-text, .delete-icon-btn, .modal-content')) {
     return
   }
   attemptHit(event.clientX, event.clientY)
 }
 
-// ---------------------------------------------------------
-// ★スマホ用: タッチ開始 (位置を記憶)
-// ---------------------------------------------------------
 const handleTouchStart = (event) => {
   if (event.touches.length > 0) {
     touchStartX = event.touches[0].clientX
@@ -109,11 +93,7 @@ const handleTouchStart = (event) => {
   }
 }
 
-// ---------------------------------------------------------
-// ★スマホ用: タッチ終了 (タップ判定)
-// ---------------------------------------------------------
 const handleTouchEnd = (event) => {
-  // UIパーツへのタップなら無視
   if (event.target.closest('button, input, label, a, .task-text, .delete-icon-btn, .modal-content')) {
     return
   }
@@ -122,11 +102,9 @@ const handleTouchEnd = (event) => {
     const endX = event.changedTouches[0].clientX
     const endY = event.changedTouches[0].clientY
 
-    // 指の移動距離を計算
     const diffX = Math.abs(endX - touchStartX)
     const diffY = Math.abs(endY - touchStartY)
 
-    // 移動が10px以内なら「タップ」とみなす (スクロール対策)
     if (diffX < 10 && diffY < 10) {
       attemptHit(endX, endY)
     }
@@ -145,7 +123,6 @@ onMounted(async () => {
     resolution: window.devicePixelRatio || 2,
   })
 
-  // PIXIのデフォルトイベントは無効化（Windowイベントで制御するため）
   if (app.renderer.events) {
     app.renderer.events.destroy()
     delete app.renderer.events
@@ -178,19 +155,13 @@ onMounted(async () => {
   playMotionByState()
 
   window.addEventListener('resize', onResize)
-  
-  // ★イベントリスナー登録 (PC & スマホ)
-  // PCでのクリック
   window.addEventListener('click', handleGlobalClick)
-  // スマホでのタップ制御
   window.addEventListener('touchstart', handleTouchStart, { passive: true })
   window.addEventListener('touchend', handleTouchEnd)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onResize)
-  
-  // ★イベントリスナー解除
   window.removeEventListener('click', handleGlobalClick)
   window.removeEventListener('touchstart', handleTouchStart)
   window.removeEventListener('touchend', handleTouchEnd)
@@ -249,7 +220,6 @@ const playMotionByState = async () => {
       playMotionByState()
     }
   } catch (e) {
-    // 割り込み発生時は無視
   }
 }
 
@@ -270,14 +240,12 @@ const onResize = () => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  /* ★重要: ここをクリック透過にしておかないと、背面のタスクが押せなくなる */
   pointer-events: none; 
 }
 
 canvas {
   width: 100%;
   height: 100%;
-  /* Canvas自体もクリック透過 */
   pointer-events: none; 
 }
 </style>

@@ -57,10 +57,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['change-tab'])
-
-// PC表示かどうかの状態を管理
 const isPc = ref(window.innerWidth >= 768)
-// ウィンドウのリサイズ時にisPcの値を更新
 const handleResize = () => {
   isPc.value = window.innerWidth >= 768
 }
@@ -75,9 +72,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ------------------------------------------------ */
-/* モバイル (フッター) のスタイル                     */
-/* ------------------------------------------------ */
 .navigation {
   flex-shrink: 0;
   position: fixed;
@@ -113,19 +107,18 @@ onUnmounted(() => {
   text-decoration: none;
 }
 
-/* ⬇️ 【重要】span全体ではなく、nav-textクラスだけを消すように変更 */
 .navigation button .nav-text,
 .navigation .external-link-button .nav-text {
   display: none;
 }
 
-/* SVGアイコンのスタイル */
+
 .navigation .custom-icon {
   width: 24px;
   height: 24px;
   color: #fff;
   fill: currentColor;
-  margin-bottom: 0; /* ⬅️ テキストがないためマージンを0に */
+  margin-bottom: 0;
   transition: fill 0.3s, color 0.3s;
 }
 
@@ -139,15 +132,12 @@ onUnmounted(() => {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* アイコンとバッジをまとめるラッパー */
 .icon-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-
-/* バッジのスタイル (赤丸) */
 .navigation .badge {
   background-color: #ff3b30;
   color: white;
@@ -159,15 +149,13 @@ onUnmounted(() => {
   min-width: 16px;
   text-align: center;
   
-  /* 位置調整 (アイコンの右上) */
   position: absolute;
   top: -5px;
   right: -8px;
-  border: 2px solid #ff8c00; /* 背景と同じ枠線で視認性UP */
+  border: 2px solid #ff8c00; 
   z-index: 10;
 }
 
-/* 🔔 ベル揺れアニメーション */
 @keyframes bell-shake {
   0% { transform: rotate(0); }
   15% { transform: rotate(15deg); }
@@ -180,13 +168,10 @@ onUnmounted(() => {
 }
 
 .shake-bell {
-  animation: bell-shake 2s infinite; /* 2秒ごとに揺らす */
+  animation: bell-shake 2s infinite; 
   transform-origin: top center;
 }
 
-/* ------------------------------------------------ */
-/* PC版 (サイドバー) のスタイル                       */
-/* ------------------------------------------------ */
 @media (min-width: 768px) {
   .navigation {
     position: fixed;
@@ -238,12 +223,10 @@ onUnmounted(() => {
     margin-right: 15px;
     fill: currentColor;
   }
-  /* PC版でテキストを表示 */
   .navigation button .nav-text {
     display: initial;
     font-size: 18px;
   }
-  /* PC版でのバッジ位置微調整（少し内側に寄せる） */
   .navigation .badge {
     top: -5px;
     right: -5px;

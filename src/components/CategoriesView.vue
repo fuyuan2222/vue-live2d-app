@@ -30,12 +30,8 @@ function addCategoryHandler() {
 </script>
 
 <style scoped>
-/* ★ここを追加：全体に余白をつける */
 .category-management {
   padding: 20px;
-  /* もし画面幅いっぱいに広がりすぎるのが嫌なら、以下も追加すると良いです */
-  /* max-width: 800px; */
-  /* margin: 0 auto; */
 }
 
 .category-input {
@@ -45,7 +41,6 @@ function addCategoryHandler() {
 }
 .category-input input {
   flex-grow: 1;
-  /* 入力欄も見やすくするために少しスタイル調整（任意） */
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 8px;

@@ -71,10 +71,8 @@ const {
 } = inject('character-data')
 
 const showCompleteEffect = ref(false)
-const showResumeEffect = ref(false) // チェックを外した時の反応用は残します
+const showResumeEffect = ref(false)
 const selectedTask = ref(null)
-
-// ★削除: 起動時の強制フラグ isStartingUp を削除しました
 
 const filteredTodayTasks = computed(() => {
   const today = new Date().toISOString().slice(0, 10)
@@ -111,13 +109,11 @@ const getEmotion = computed(() => {
   }
 
   // 2. タスク再開時 (Cheer)
-  // チェックを外した時だけ応援します（起動時はここに入らない）
   if (showResumeEffect.value) {
     return 'cheer'
   }
 
   // 3. 通常時 (Idle)
-  // 起動時はここになります
   return 'idle'
 })
 
@@ -141,11 +137,9 @@ watch(() => filteredTodayTasks.value.map(t => t.done), (newVal, oldVal) => {
   }
 }, { deep: true })
 
-// ★削除: onMounted での強制Cheer処理も削除しました
 </script>
 
 <style scoped>
-/* スタイルは変更なし */
 .view-container {
   width: 100%;
   height: 100%;

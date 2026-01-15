@@ -32,26 +32,16 @@
 
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref } from 'vue'
-
-// 親(App.vue等)から提供されたデータと関数を受け取る
 const { notifications, markAllAsRead, todos, addNotification } = inject('notification-data')
 
 const monitorInterval = ref(null)
-
-// 未読件数の計算
 const unreadCount = computed(() => {
   return notifications.value.filter(note => !note.read).length
 })
 
-// --- アプリ内通知の監視ロジック ---
-
 const startMonitor = () => {
-  // 10秒ごとにチェック
   monitorInterval.value = setInterval(() => {
     const now = Date.now()
-
-    // 【重要】日本時間で「今日」の日付文字列(YYYY-MM-DD)を作成
-    // ※ new Date().toISOString() だと9時間ずれて判定ミスするため
     const d = new Date()
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
@@ -59,7 +49,6 @@ const startMonitor = () => {
     const today = `${year}-${month}-${day}`
     
     todos.value.forEach(task => {
-      // 完了済みのタスクは通知しない
       if (task.isDone) return 
 
       // -------------------------------
@@ -67,9 +56,6 @@ const startMonitor = () => {
       // -------------------------------
       if (task.reminderTime) {
         const reminderTs = new Date(task.reminderTime).getTime()
-        
-        // 現在時刻を過ぎており、かつ「時間通知」がまだの場合
-        // ※ task.timeNotified という新しいフラグを使います
         if (reminderTs <= now && !task.timeNotified) {
           triggerNotification(task, 'time')
         }
@@ -78,38 +64,31 @@ const startMonitor = () => {
       // -------------------------------
       // パターンB: 本日締め切りのタスク (日付一致)
       // -------------------------------
-      // 期限が今日で、かつ「日付通知」がまだの場合
-      // ※ task.dateNotified という新しいフラグを使います
       if (task.dueDate === today && !task.dateNotified) {
-        // ここで「もし時間指定があるなら、朝の通知は出さない」などの調整も可能です
-        // 今回は両方出す設定にしています
         triggerNotification(task, 'date')
       }
     })
-  }, 10000) // 10秒間隔
+  }, 10000)
 }
 
 const triggerNotification = (task, type) => {
   let msg = ''
   
-  // タイプによってメッセージとフラグを使い分ける
   if (type === 'time') {
     msg = `⏰ ${task.text} の時間です！`
-    task.timeNotified = true // 時間通知済みフラグON
+    task.timeNotified = true 
   } else {
     msg = `📅 本日締切: ${task.text}`
-    task.dateNotified = true // 日付通知済みフラグON
+    task.dateNotified = true 
   }
 
-  // 新しい通知オブジェクトを作成
   const newNote = {
-    id: Date.now(), // 一意のID
+    id: Date.now(), 
     message: msg,
     timestamp: Date.now(),
     read: false
   }
-  
-  // injectした関数を使って通知リストに追加
+ 
   addNotification(newNote)
 }
 
@@ -119,7 +98,6 @@ const stopMonitor = () => {
   }
 }
 
-// マウント時に監視開始、アンマウント時に停止
 onMounted(() => {
   startMonitor()
 })
@@ -136,7 +114,7 @@ onUnmounted(() => {
   border-radius: 8px;
   margin: 20px; 
   background-color: #fff; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 少し影をつけてリッチに */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
 }
 
 .header {
@@ -188,10 +166,10 @@ li {
   transition: background 0.3s;
 }
 
-/* 未読時のスタイル */
+
 .unread {
-  background: #fff8e1; /* 薄いオレンジ */
-  border-left: 4px solid #ff9800; /* 左端にアクセントカラー */
+  background: #fff8e1; 
+  border-left: 4px solid #ff9800;
 }
 
 .unread .message {
@@ -200,13 +178,13 @@ li {
 }
 
 .message {
-  flex: 1; /* メッセージ部分を広げる */
+  flex: 1;
 }
 
 .timestamp {
   font-size: 0.75em;
   color: #999;
   margin-left: 15px;
-  white-space: nowrap; /* 時間で改行させない */
+  white-space: nowrap; 
 }
 </style>

@@ -57,7 +57,6 @@
 import { inject, computed } from 'vue'
 import Live2DView from './Live2DView.vue'
 
-// App.vue から提供されたデータを受け取る
 const {
   characterPersonality,
   characterFrontHairstyle,
@@ -67,7 +66,6 @@ const {
 
 const { tasks } = inject('task-data');
 
-// タスク状況に応じて表情を変えるロジック
 const getEmotion = computed(() => {
   if (!tasks || !tasks.value) return 'idle'; 
   const completed = tasks.value.filter(t => t.done).length
@@ -98,21 +96,19 @@ h2 {
   color: #333;
 }
 
-/* CharacterCustomization.vue の <style scoped> 内 */
-
 .live2d-preview-container {
-  /* 固定サイズにしたい場合 */
-  width: 300px;  /* 横幅を固定 */
-  height: 350px; /* 高さを固定 */
+ 
+  width: 300px; 
+  height: 350px;
   padding-bottom: 10px;
-  margin: 0 auto; /* 中央寄せ */
+  margin: 0 auto;
   position: relative;
   overflow: hidden;
 }
-/* モバイルだけでなくデスクトップでも高さを抑える */
+
 @media (min-width: 768px) {
   .live2d-preview-container {
-    height: 400px; /* ★PC版でも大きくなりすぎないように調整 */
+    height: 400px;
     flex-grow: 0;
     margin-bottom: 30px;
   }
